@@ -82,8 +82,10 @@ async def login(body: LoginRequest):
     try:
         async with db.execute("SELECT * FROM users WHERE email = ?", (body.email,)) as cur:
             row = await cur.fetchone()
-        if not row or not verify_password(body.password, row["password_hash"]):
-            raise HTTPException(status_code=401, detail="Invalid email or password")
+        if not row:
+            raise HTTPException(status_code=401, detail="No account found with this email. Please sign up.")
+        if not verify_password(body.password, row["password_hash"]):
+            raise HTTPException(status_code=401, detail="Invalid password")
         token = create_access_token(row["id"])
         return TokenResponse(access_token=token, user_id=row["id"])
     finally:
@@ -96,7 +98,15 @@ async def register(body: RegisterRequest):
     try:
         user_id = f"user-{uuid.uuid4().hex[:12]}"
         parts = body.name.strip().split()
-        initials = (parts[0][0] + (parts[-1][0] if len(parts) > 1 else parts[0][1])).upper()
+        if not parts:
+            initials = "??"
+        elif len(parts) == 1:
+            initials = parts[0][:2].upper()
+            if len(initials) == 1:
+                initials += initials
+        else:
+            initials = (parts[0][0] + parts[-1][0]).upper()
+
         colors = ["#6366F1", "#EC4899", "#3B82F6", "#10B981", "#F97316", "#8B5CF6", "#14B8A6", "#F59E0B"]
         avatar_color = colors[len(user_id) % len(colors)]
         pw_hash = hash_password(body.password)
@@ -107,8 +117,11 @@ async def register(body: RegisterRequest):
                  body.major, body.year, None, None, None, "sharing", "exact"),
             )
             await db.commit()
-        except Exception:
-            raise HTTPException(status_code=409, detail="Email already registered")
+        except Exception as e:
+            await db.rollback()
+            if "UNIQUE constraint failed: users.email" in str(e):
+                raise HTTPException(status_code=409, detail="Email already registered")
+            raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
         token = create_access_token(user_id)
         return TokenResponse(access_token=token, user_id=user_id)
     finally:
