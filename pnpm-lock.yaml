@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  vite: 6.3.5
+  vite: 6.4.1
 
 dependencies:
   '@emotion/react':
@@ -189,7 +189,7 @@ dependencies:
 devDependencies:
   '@tailwindcss/vite':
     specifier: 4.1.12
-    version: 4.1.12(vite@6.3.5)
+    version: 4.1.12(vite@6.4.1)
   '@types/react':
     specifier: ^18.3.1
     version: 18.3.28
@@ -198,7 +198,7 @@ devDependencies:
     version: 18.3.7(@types/react@18.3.28)
   '@vitejs/plugin-react':
     specifier: 4.7.0
-    version: 4.7.0(vite@6.3.5)
+    version: 4.7.0(vite@6.4.1)
   tailwindcss:
     specifier: 4.1.12
     version: 4.1.12
@@ -206,8 +206,8 @@ devDependencies:
     specifier: ^5.6.0
     version: 5.9.3
   vite:
-    specifier: 6.3.5
-    version: 6.3.5
+    specifier: 6.4.1
+    version: 6.4.1
 
 packages:
 
@@ -2546,15 +2546,15 @@ packages:
       '@tailwindcss/oxide-win32-x64-msvc': 4.1.12
     dev: true
 
-  /@tailwindcss/vite@4.1.12(vite@6.3.5):
+  /@tailwindcss/vite@4.1.12(vite@6.4.1):
     resolution: {integrity: sha512-4pt0AMFDx7gzIrAOIYgYP0KCBuKWqyW8ayrdiLEjoJTT4pKTjrzG/e4uzWtTLDziC+66R9wbUqZBccJalSE5vQ==}
     peerDependencies:
-      vite: 6.3.5
+      vite: 6.4.1
     dependencies:
       '@tailwindcss/node': 4.1.12
       '@tailwindcss/oxide': 4.1.12
       tailwindcss: 4.1.12
-      vite: 6.3.5
+      vite: 6.4.1
     dev: true
 
   /@types/babel__core@7.20.5:
@@ -2670,11 +2670,11 @@ packages:
       '@types/prop-types': 15.7.15
       csstype: 3.2.3
 
-  /@vitejs/plugin-react@4.7.0(vite@6.3.5):
+  /@vitejs/plugin-react@4.7.0(vite@6.4.1):
     resolution: {integrity: sha512-gUu9hwfWvvEDBBmgtAowQCojwZmJ5mcLn3aufeCsitijs3+f2NsrPtlAWIR6OPiqljl96GVCUbLe0HyqIpVaoA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
-      vite: 6.3.5
+      vite: 6.4.1
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.0)
@@ -2682,7 +2682,7 @@ packages:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 6.3.5
+      vite: 6.4.1
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -3910,8 +3910,8 @@ packages:
       d3-timer: 3.0.1
     dev: false
 
-  /vite@6.3.5:
-    resolution: {integrity: sha512-cZn6NDFE7wdTpINgs++ZJ4N49W2vRp8LCKrn3Ob1kYNtOo21vfDoaV5GzBfLU4MovSAB8uNRm4jgzVQZ+mBzPQ==}
+  /vite@6.4.1:
+    resolution: {integrity: sha512-+Oxm7q9hDoLMyJOYfUYBuHQo+dkAloi33apOPP56pzj+vsdJDzr+j1NISE5pyaAuKL4A3UD34qd0lx5+kfKp2g==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
     peerDependencies:
