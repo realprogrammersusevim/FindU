@@ -15,10 +15,10 @@ export function MobileLayout() {
   const { unreadCount } = useApp();
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-50 flex items-center justify-center">
+    <div className="overflow-hidden bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-50 flex items-center justify-center" style={{ height: '100dvh' }}>
       <div
         className="relative flex flex-col bg-white overflow-hidden shadow-2xl"
-        style={{ width: '430px', height: '100vh', maxHeight: '932px' }}
+        style={{ width: '430px', height: '100dvh', maxHeight: '932px' }}
       >
         {/* Page content */}
         <div className="flex-1 overflow-hidden relative">
