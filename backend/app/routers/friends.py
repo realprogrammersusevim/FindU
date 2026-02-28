@@ -10,6 +10,7 @@ from app.models.friend import (
     ToggleFavoriteBody,
 )
 from app.models.geofence import LatLng
+from app.schedule_eval import compute_effective_mode
 
 router = APIRouter()
 
@@ -19,8 +20,9 @@ async def _fetch_geofences(db):
         return [dict(r) for r in await cur.fetchall()]
 
 
-def _share_status(user_row) -> str:
-    if user_row["current_mode"] == "private":
+async def _share_status(db, user_row) -> str:
+    effective_mode = await compute_effective_mode(db, user_row)
+    if effective_mode == "private":
         return "private"
     if user_row["lat"] is None:
         return "offline"
@@ -28,7 +30,7 @@ def _share_status(user_row) -> str:
 
 
 async def _build_friend(db, friend_row, is_favorite: bool, fences: list, current_user_id: str) -> Friend:
-    status = _share_status(friend_row)
+    status = await _share_status(db, friend_row)
     location = None
     if status == "sharing":
         within = compute_within_fences(friend_row["lat"], friend_row["lng"], fences)

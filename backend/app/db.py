@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS users (
     lat             REAL,
     lng             REAL,
     current_mode    TEXT DEFAULT 'sharing',
+    mode_updated_at TEXT DEFAULT (datetime('now')),
     location_mode   TEXT DEFAULT 'exact',
     created_at      TEXT DEFAULT (datetime('now'))
 );
@@ -148,15 +149,15 @@ SEED_GEOFENCES = [
 _PW_HASH = _bcrypt.hashpw(b"password", _bcrypt.gensalt()).decode()
 
 SEED_USERS = [
-    # (id, name, initials, avatar_color, email, password_hash, major, year, bio, lat, lng, current_mode, location_mode)
-    ("me",        "Alex Chen",     "AC", "#6366F1", "alex@unl.edu",  _PW_HASH, "Computer Science",       "Junior",    "CS student at University of Nebraska-Lincoln. Passionate about algorithms, coffee, and weekend soccer.", 40.8205, -96.7000, "sharing", "exact"),
-    ("friend-1",  "Sarah Kim",     "SK", "#EC4899", "sarah@unl.edu", _PW_HASH, "Computer Science",       "Junior",    None, 40.8200, -96.7010, "sharing", "exact"),
-    ("friend-2",  "Jake Williams", "JW", "#3B82F6", "jake@unl.edu",  _PW_HASH, "Mechanical Engineering", "Senior",    None, 40.8185, -96.6985, "sharing", "binary"),
-    ("friend-3",  "Maya Patel",    "MP", "#10B981", "maya@unl.edu",  _PW_HASH, "Biology",                "Sophomore", None, None,    None,     "private", "exact"),
-    ("friend-4",  "Tyler Johnson", "TJ", "#F97316", "tyler@unl.edu", _PW_HASH, "Psychology",             "Senior",    None, 40.8210, -96.6965, "sharing", "exact"),
-    ("friend-5",  "Emma Davis",    "ED", "#8B5CF6", "emma@unl.edu",  _PW_HASH, "Mathematics",            "Junior",    None, 40.8170, -96.7020, "sharing", "exact"),
-    ("friend-6",  "Chris Park",    "CP", "#6B7280", "chris@unl.edu", _PW_HASH, "Fine Arts",              "Freshman",  None, None,    None,     "private", "exact"),
-    ("friend-7",  "Lily Chen",     "LC", "#14B8A6", "lily@unl.edu",  _PW_HASH, "Pre-Med",                "Sophomore", None, 40.8220, -96.7015, "sharing", "binary"),
+    # (id, name, initials, avatar_color, email, password_hash, major, year, bio, lat, lng, current_mode, mode_updated_at, location_mode)
+    ("me",        "Alex Chen",     "AC", "#6366F1", "alex@unl.edu",  _PW_HASH, "Computer Science",       "Junior",    "CS student at University of Nebraska-Lincoln. Passionate about algorithms, coffee, and weekend soccer.", 40.8205, -96.7000, "sharing", "2026-02-28 00:00:00", "exact"),
+    ("friend-1",  "Sarah Kim",     "SK", "#EC4899", "sarah@unl.edu", _PW_HASH, "Computer Science",       "Junior",    None, 40.8200, -96.7010, "sharing", "2026-02-28 00:00:00", "exact"),
+    ("friend-2",  "Jake Williams", "JW", "#3B82F6", "jake@unl.edu",  _PW_HASH, "Mechanical Engineering", "Senior",    None, 40.8185, -96.6985, "sharing", "2026-02-28 00:00:00", "binary"),
+    ("friend-3",  "Maya Patel",    "MP", "#10B981", "maya@unl.edu",  _PW_HASH, "Biology",                "Sophomore", None, None,    None,     "private", "2026-02-28 00:00:00", "exact"),
+    ("friend-4",  "Tyler Johnson", "TJ", "#F97316", "tyler@unl.edu", _PW_HASH, "Psychology",             "Senior",    None, 40.8210, -96.6965, "sharing", "2026-02-28 00:00:00", "exact"),
+    ("friend-5",  "Emma Davis",    "ED", "#8B5CF6", "emma@unl.edu",  _PW_HASH, "Mathematics",            "Junior",    None, 40.8170, -96.7020, "sharing", "2026-02-28 00:00:00", "exact"),
+    ("friend-6",  "Chris Park",    "CP", "#6B7280", "chris@unl.edu", _PW_HASH, "Fine Arts",              "Freshman",  None, None,    None,     "private", "2026-02-28 00:00:00", "exact"),
+    ("friend-7",  "Lily Chen",     "LC", "#14B8A6", "lily@unl.edu",  _PW_HASH, "Pre-Med",                "Sophomore", None, 40.8220, -96.7015, "sharing", "2026-02-28 00:00:00", "binary"),
 ]
 
 SEED_FRIENDSHIPS = [
@@ -263,7 +264,7 @@ async def init_db() -> None:
             SEED_GEOFENCES,
         )
         await db.executemany(
-            "INSERT INTO users VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))",
+            "INSERT INTO users VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))",
             SEED_USERS,
         )
         await db.executemany(

@@ -1,7 +1,12 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from app.auth import get_current_user_id, hash_password, verify_password, create_access_token
+from app.auth import (
+    get_current_user_id,
+    hash_password,
+    verify_password,
+    create_access_token,
+)
 from app.db import get_db, compute_within_fences
 from app.models.auth import LoginRequest, RegisterRequest, TokenResponse
 from app.models.user import (
@@ -25,7 +30,9 @@ router = APIRouter()
 
 
 async def _fetch_geofences(db):
-    async with db.execute("SELECT id, center_lat, center_lng, radius FROM geofences") as cur:
+    async with db.execute(
+        "SELECT id, center_lat, center_lng, radius FROM geofences"
+    ) as cur:
         return [dict(r) for r in await cur.fetchall()]
 
 
@@ -54,7 +61,9 @@ async def _build_user_profile(db, user_id: str) -> UserProfile:
     ) as cur:
         group_count = (await cur.fetchone())[0]
 
-    position = LatLng(lat=row["lat"], lng=row["lng"]) if row["lat"] is not None else None
+    position = (
+        LatLng(lat=row["lat"], lng=row["lng"]) if row["lat"] is not None else None
+    )
 
     return UserProfile(
         id=row["id"],
@@ -77,6 +86,7 @@ async def _build_user_profile(db, user_id: str) -> UserProfile:
 # User search
 # ---------------------------------------------------------------------------
 
+
 class UserSearchResult(BaseModel):
     id: str
     name: str
@@ -84,6 +94,7 @@ class UserSearchResult(BaseModel):
     avatarColor: str
     major: str | None = None
     year: str | None = None
+
 
 @router.get("/search", response_model=list[UserSearchResult])
 async def search_users(q: str, current_user_id: str = Depends(get_current_user_id)):
@@ -125,14 +136,20 @@ async def search_users(q: str, current_user_id: str = Depends(get_current_user_i
 # Auth endpoints (unauthenticated)
 # ---------------------------------------------------------------------------
 
+
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest):
     db = await get_db()
     try:
-        async with db.execute("SELECT * FROM users WHERE email = ?", (body.email,)) as cur:
+        async with db.execute(
+            "SELECT * FROM users WHERE email = ?", (body.email,)
+        ) as cur:
             row = await cur.fetchone()
         if not row:
-            raise HTTPException(status_code=401, detail="No account found with this email. Please sign up.")
+            raise HTTPException(
+                status_code=401,
+                detail="No account found with this email. Please sign up.",
+            )
         if not verify_password(body.password, row["password_hash"]):
             raise HTTPException(status_code=401, detail="Invalid password")
         token = create_access_token(row["id"])
@@ -156,14 +173,38 @@ async def register(body: RegisterRequest):
         else:
             initials = (parts[0][0] + parts[-1][0]).upper()
 
-        colors = ["#6366F1", "#EC4899", "#3B82F6", "#10B981", "#F97316", "#8B5CF6", "#14B8A6", "#F59E0B"]
+        colors = [
+            "#6366F1",
+            "#EC4899",
+            "#3B82F6",
+            "#10B981",
+            "#F97316",
+            "#8B5CF6",
+            "#14B8A6",
+            "#F59E0B",
+        ]
         avatar_color = colors[len(user_id) % len(colors)]
         pw_hash = hash_password(body.password)
         try:
             await db.execute(
-                "INSERT INTO users VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))",
-                (user_id, body.name, initials, avatar_color, body.email, pw_hash,
-                 body.major, body.year, None, None, None, "sharing", "exact"),
+                """
+                INSERT INTO users (
+                    id, name, initials, avatar_color, email, password_hash, 
+                    major, year, current_mode, location_mode
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    user_id,
+                    body.name,
+                    initials,
+                    avatar_color,
+                    body.email,
+                    pw_hash,
+                    body.major,
+                    body.year,
+                    "sharing",
+                    "exact",
+                ),
             )
             await db.commit()
         except Exception as e:
@@ -181,6 +222,7 @@ async def register(body: RegisterRequest):
 # /users/me
 # ---------------------------------------------------------------------------
 
+
 @router.get("/me", response_model=UserProfile)
 async def get_current_user(current_user_id: str = Depends(get_current_user_id)):
     db = await get_db()
@@ -191,7 +233,9 @@ async def get_current_user(current_user_id: str = Depends(get_current_user_id)):
 
 
 @router.put("/me", response_model=UserProfile)
-async def update_profile(body: UpdateProfileBody, current_user_id: str = Depends(get_current_user_id)):
+async def update_profile(
+    body: UpdateProfileBody, current_user_id: str = Depends(get_current_user_id)
+):
     db = await get_db()
     try:
         fields = {k: v for k, v in body.model_dump().items() if v is not None}
@@ -209,7 +253,9 @@ async def update_profile(body: UpdateProfileBody, current_user_id: str = Depends
 
 
 @router.patch("/me/location", response_model=UserProfile)
-async def update_location(body: UpdateLocationBody, current_user_id: str = Depends(get_current_user_id)):
+async def update_location(
+    body: UpdateLocationBody, current_user_id: str = Depends(get_current_user_id)
+):
     db = await get_db()
     try:
         await db.execute(
@@ -223,11 +269,13 @@ async def update_location(body: UpdateLocationBody, current_user_id: str = Depen
 
 
 @router.patch("/me/privacy-mode", response_model=UserProfile)
-async def update_privacy_mode(body: UpdatePrivacyModeBody, current_user_id: str = Depends(get_current_user_id)):
+async def update_privacy_mode(
+    body: UpdatePrivacyModeBody, current_user_id: str = Depends(get_current_user_id)
+):
     db = await get_db()
     try:
         await db.execute(
-            "UPDATE users SET current_mode = ? WHERE id = ?",
+            "UPDATE users SET current_mode = ?, mode_updated_at = datetime('now') WHERE id = ?",
             (body.mode, current_user_id),
         )
         await db.commit()
@@ -237,7 +285,9 @@ async def update_privacy_mode(body: UpdatePrivacyModeBody, current_user_id: str 
 
 
 @router.patch("/me/location-mode", response_model=UserProfile)
-async def update_location_mode(body: UpdateLocationModeBody, current_user_id: str = Depends(get_current_user_id)):
+async def update_location_mode(
+    body: UpdateLocationModeBody, current_user_id: str = Depends(get_current_user_id)
+):
     db = await get_db()
     try:
         await db.execute(
@@ -254,8 +304,10 @@ async def update_location_mode(body: UpdateLocationModeBody, current_user_id: st
 # /users/me/schedule
 # ---------------------------------------------------------------------------
 
+
 async def _fetch_slots(db, user_id: str) -> list[ScheduleSlot]:
     import json
+
     async with db.execute(
         "SELECT * FROM schedule_slots WHERE user_id = ? ORDER BY rowid",
         (user_id,),
@@ -307,19 +359,26 @@ async def get_schedule(current_user_id: str = Depends(get_current_user_id)):
 
 
 @router.post("/me/schedule/slots", response_model=ScheduleSlot)
-async def create_slot(body: CreateSlotBody, current_user_id: str = Depends(get_current_user_id)):
+async def create_slot(
+    body: CreateSlotBody, current_user_id: str = Depends(get_current_user_id)
+):
     import json
+
     slot_id = f"slot-{uuid.uuid4().hex[:8]}"
     db = await get_db()
     try:
         await db.execute(
             "INSERT INTO schedule_slots VALUES (?,?,?,?,?,?,?,?,?)",
             (
-                slot_id, current_user_id,
+                slot_id,
+                current_user_id,
                 json.dumps(body.days),
-                body.startTime, body.endTime,
-                body.mode, body.label,
-                int(body.isDefault), int(body.isActive),
+                body.startTime,
+                body.endTime,
+                body.mode,
+                body.label,
+                int(body.isDefault),
+                int(body.isActive),
             ),
         )
         await db.commit()
@@ -338,8 +397,13 @@ async def create_slot(body: CreateSlotBody, current_user_id: str = Depends(get_c
 
 
 @router.put("/me/schedule/slots/{slot_id}", response_model=ScheduleSlot)
-async def update_slot(slot_id: str, body: UpdateSlotBody, current_user_id: str = Depends(get_current_user_id)):
+async def update_slot(
+    slot_id: str,
+    body: UpdateSlotBody,
+    current_user_id: str = Depends(get_current_user_id),
+):
     import json
+
     db = await get_db()
     try:
         async with db.execute(
@@ -352,13 +416,19 @@ async def update_slot(slot_id: str, body: UpdateSlotBody, current_user_id: str =
 
         updates = body.model_dump(exclude_none=True)
         col_map = {
-            "days": "days", "startTime": "start_time", "endTime": "end_time",
-            "mode": "mode", "label": "label", "isActive": "is_active",
+            "days": "days",
+            "startTime": "start_time",
+            "endTime": "end_time",
+            "mode": "mode",
+            "label": "label",
+            "isActive": "is_active",
         }
         if updates:
             processed = {}
             for k, v in updates.items():
-                processed[col_map[k]] = json.dumps(v) if k == "days" else (int(v) if k == "isActive" else v)
+                processed[col_map[k]] = (
+                    json.dumps(v) if k == "days" else (int(v) if k == "isActive" else v)
+                )
             sets = ", ".join(f"{col} = ?" for col in processed)
             await db.execute(
                 f"UPDATE schedule_slots SET {sets} WHERE id = ?",
@@ -366,7 +436,9 @@ async def update_slot(slot_id: str, body: UpdateSlotBody, current_user_id: str =
             )
             await db.commit()
 
-        async with db.execute("SELECT * FROM schedule_slots WHERE id = ?", (slot_id,)) as cur:
+        async with db.execute(
+            "SELECT * FROM schedule_slots WHERE id = ?", (slot_id,)
+        ) as cur:
             updated = await cur.fetchone()
         return ScheduleSlot(
             id=updated["id"],
@@ -383,7 +455,9 @@ async def update_slot(slot_id: str, body: UpdateSlotBody, current_user_id: str =
 
 
 @router.delete("/me/schedule/slots/{slot_id}")
-async def delete_slot(slot_id: str, current_user_id: str = Depends(get_current_user_id)):
+async def delete_slot(
+    slot_id: str, current_user_id: str = Depends(get_current_user_id)
+):
     db = await get_db()
     try:
         await db.execute(
@@ -397,13 +471,23 @@ async def delete_slot(slot_id: str, current_user_id: str = Depends(get_current_u
 
 
 @router.post("/me/schedule/exceptions", response_model=ScheduleException)
-async def create_exception(body: CreateExceptionBody, current_user_id: str = Depends(get_current_user_id)):
+async def create_exception(
+    body: CreateExceptionBody, current_user_id: str = Depends(get_current_user_id)
+):
     exc_id = f"exc-{uuid.uuid4().hex[:8]}"
     db = await get_db()
     try:
         await db.execute(
             "INSERT INTO schedule_exceptions VALUES (?,?,?,?,?,?,?)",
-            (exc_id, current_user_id, body.date, body.startTime, body.endTime, body.mode, body.note),
+            (
+                exc_id,
+                current_user_id,
+                body.date,
+                body.startTime,
+                body.endTime,
+                body.mode,
+                body.note,
+            ),
         )
         await db.commit()
         return ScheduleException(
@@ -419,7 +503,9 @@ async def create_exception(body: CreateExceptionBody, current_user_id: str = Dep
 
 
 @router.delete("/me/schedule/exceptions/{exc_id}")
-async def delete_exception(exc_id: str, current_user_id: str = Depends(get_current_user_id)):
+async def delete_exception(
+    exc_id: str, current_user_id: str = Depends(get_current_user_id)
+):
     db = await get_db()
     try:
         await db.execute(

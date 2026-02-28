@@ -12,6 +12,7 @@ from app.models.group import (
     ReplaceRulesBody,
     UpdateMemberRoleBody,
 )
+from app.schedule_eval import compute_effective_mode
 
 router = APIRouter()
 
@@ -27,7 +28,7 @@ async def _build_group(db, group_row, fences: list, current_user_id: str) -> Gro
     # Members
     async with db.execute(
         """
-        SELECT gm.role, gm.alerts_enabled, u.id, u.name, u.initials, u.avatar_color, u.lat, u.lng, u.current_mode
+        SELECT gm.role, gm.alerts_enabled, u.id, u.name, u.initials, u.avatar_color, u.lat, u.lng, u.current_mode, u.mode_updated_at
         FROM group_members gm
         JOIN users u ON u.id = gm.user_id
         WHERE gm.group_id = ?
@@ -52,7 +53,8 @@ async def _build_group(db, group_row, fences: list, current_user_id: str) -> Gro
             gf_ids = [r["geofence_id"] for r in await cur2.fetchall()]
 
         in_fence = any(fid in within for fid in gf_ids)
-        is_online = mr["current_mode"] == "sharing" and mr["lat"] is not None
+        effective_mode = await compute_effective_mode(db, mr)
+        is_online = effective_mode == "sharing" and mr["lat"] is not None
 
         members.append(GroupMember(
             userId=mr["id"],
