@@ -52,3 +52,7 @@ class ToggleAlertsBody(BaseModel):
 
 class ReplaceRulesBody(BaseModel):
     rules: list[GroupRule]
+
+
+class UpdateMemberRoleBody(BaseModel):
+    role: Literal["admin", "moderator", "member"]

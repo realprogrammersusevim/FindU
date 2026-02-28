@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Search, Plus, Users, Clock, MapPin, Shield, Bell, BellOff, ChevronRight } from 'lucide-react';
+import { Search, Plus, Clock, MapPin, Bell, BellOff, ChevronRight, Loader2 } from 'lucide-react';
 import { Link } from 'react-router';
+import { AnimatePresence, motion } from 'motion/react';
 import { useApp } from '../store/AppContext';
-import type { Group } from '../types';
+import type { Group, GroupType } from '../types';
 
 const typeConfig: Record<string, { label: string; emoji: string }> = {
   greek: { label: 'Greek Life', emoji: '🏛️' },
@@ -11,6 +12,172 @@ const typeConfig: Record<string, { label: string; emoji: string }> = {
   sports: { label: 'Sports', emoji: '🏆' },
   custom: { label: 'Custom', emoji: '⭐' },
 };
+
+const PRESET_COLORS = [
+  '#6366F1', '#EC4899', '#3B82F6', '#10B981',
+  '#F97316', '#8B5CF6', '#14B8A6', '#F59E0B',
+];
+
+function CreateGroupModal({ onClose }: { onClose: () => void }) {
+  const { createGroup } = useApp();
+  const [name, setName] = useState('');
+  const [type, setType] = useState<GroupType>('custom');
+  const [emoji, setEmoji] = useState('⭐');
+  const [description, setDescription] = useState('');
+  const [color, setColor] = useState('#6366F1');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const EMOJI_OPTIONS: Record<GroupType, string> = {
+    greek: '🏛️',
+    club: '🎯',
+    class: '📚',
+    sports: '🏆',
+    custom: '⭐',
+  };
+
+  const handleTypeChange = (t: GroupType) => {
+    setType(t);
+    setEmoji(EMOJI_OPTIONS[t]);
+  };
+
+  const handleSubmit = async () => {
+    if (!name.trim()) { setError('Name is required'); return; }
+    setError('');
+    setLoading(true);
+    try {
+      await createGroup({ name: name.trim(), type, emoji, description: description.trim() || undefined, color });
+      onClose();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to create group');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 25 }}
+        className="bg-white rounded-t-3xl w-full max-w-[430px] overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h3 className="font-bold text-gray-900">Create Group</h3>
+          <button onClick={onClose} className="text-gray-400 text-xl leading-none">×</button>
+        </div>
+
+        <div className="px-5 py-4 space-y-4 overflow-y-auto" style={{ maxHeight: '75vh' }}>
+          {/* Emoji + Name row */}
+          <div className="flex gap-3 items-start">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 cursor-pointer"
+              style={{ backgroundColor: `${color}18` }}
+            >
+              {emoji}
+            </div>
+            <div className="flex-1">
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">Group Name</label>
+              <input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="e.g. Study Squad"
+                className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 outline-none"
+                autoFocus
+              />
+            </div>
+          </div>
+
+          {/* Type */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-2 block">Type</label>
+            <div className="grid grid-cols-5 gap-1.5">
+              {(Object.keys(typeConfig) as GroupType[]).map(t => (
+                <button
+                  key={t}
+                  onClick={() => handleTypeChange(t)}
+                  className={`flex flex-col items-center gap-1 py-2 rounded-xl text-[10px] font-semibold transition-all ${
+                    type === t ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  <span className="text-lg">{typeConfig[t].emoji}</span>
+                  {typeConfig[t].label.split(' ')[0]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Color */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-2 block">Color</label>
+            <div className="flex gap-2 flex-wrap">
+              {PRESET_COLORS.map(c => (
+                <button
+                  key={c}
+                  onClick={() => setColor(c)}
+                  className={`w-8 h-8 rounded-full transition-all ${color === c ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''}`}
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">Description (optional)</label>
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="What's this group about?"
+              rows={2}
+              className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 outline-none resize-none"
+            />
+          </div>
+
+          {error && <p className="text-xs text-red-500">{error}</p>}
+
+          {/* Preview */}
+          <div className="bg-gray-50 rounded-2xl p-3 flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+              style={{ backgroundColor: `${color}18` }}
+            >
+              {emoji}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900">{name || 'Group Name'}</p>
+              <span
+                className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                style={{ backgroundColor: `${color}20`, color }}
+              >
+                {typeConfig[type]?.label}
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !name.trim()}
+            className="w-full py-3 bg-indigo-600 text-white text-sm font-semibold rounded-2xl disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            {loading ? 'Creating…' : 'Create Group'}
+          </button>
+        </div>
+        <div className="h-4" />
+      </motion.div>
+    </motion.div>
+  );
+}
 
 function GroupCard({ group, onToggleJoin, onToggleAlerts }: {
   group: Group;
@@ -157,6 +324,7 @@ export function GroupsPage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [tab, setTab] = useState<'mine' | 'discover'>('mine');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const myGroups = groups.filter((g) => g.isJoined);
   const discoverGroups = groups.filter((g) => !g.isJoined);
@@ -179,7 +347,10 @@ export function GroupsPage() {
             <h1 className="text-xl font-bold text-gray-900">Groups</h1>
             <p className="text-xs text-gray-500">{myGroups.length} joined</p>
           </div>
-          <button className="flex items-center gap-1.5 bg-indigo-600 text-white text-xs font-semibold px-3 py-2 rounded-xl">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-1.5 bg-indigo-600 text-white text-xs font-semibold px-3 py-2 rounded-xl"
+          >
             <Plus className="w-3.5 h-3.5" />
             Create
           </button>
@@ -267,6 +438,11 @@ export function GroupsPage() {
           </div>
         )}
       </div>
+
+      {/* Create Group Modal */}
+      <AnimatePresence>
+        {showCreateModal && <CreateGroupModal onClose={() => setShowCreateModal(false)} />}
+      </AnimatePresence>
     </div>
   );
 }

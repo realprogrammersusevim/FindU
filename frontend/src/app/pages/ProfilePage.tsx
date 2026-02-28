@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  User,
   Bell,
   Shield,
   Info,
@@ -15,14 +14,129 @@ import {
   Settings,
   LogOut,
   Edit3,
+  Loader2,
 } from 'lucide-react';
 import { Link } from 'react-router';
 import { useApp } from '../store/AppContext';
 import { AnimatePresence, motion } from 'motion/react';
 
+function EditProfileModal({ onClose }: { onClose: () => void }) {
+  const { currentUser, updateProfile } = useApp();
+  const [name, setName] = useState(currentUser.name);
+  const [bio, setBio] = useState(currentUser.bio ?? '');
+  const [major, setMajor] = useState(currentUser.major ?? '');
+  const [year, setYear] = useState(currentUser.year ?? '');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSave = async () => {
+    if (!name.trim()) { setError('Name is required'); return; }
+    setError('');
+    setLoading(true);
+    try {
+      await updateProfile({
+        name: name.trim(),
+        bio: bio.trim() || undefined,
+        major: major.trim() || undefined,
+        year: year.trim() || undefined,
+      });
+      onClose();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to update profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 25 }}
+        className="bg-white rounded-t-3xl w-full max-w-[430px] overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h3 className="font-bold text-gray-900">Edit Profile</h3>
+          <button onClick={onClose} className="text-gray-400 text-xl leading-none">×</button>
+        </div>
+
+        <div className="px-5 py-4 space-y-4 overflow-y-auto" style={{ maxHeight: '70vh' }}>
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">Display Name</label>
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-800 outline-none"
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">Bio</label>
+            <textarea
+              value={bio}
+              onChange={e => setBio(e.target.value)}
+              rows={3}
+              placeholder="Tell your friends a bit about yourself…"
+              className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 outline-none resize-none"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">Major</label>
+              <input
+                value={major}
+                onChange={e => setMajor(e.target.value)}
+                placeholder="e.g. Computer Science"
+                className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">Year</label>
+              <select
+                value={year}
+                onChange={e => setYear(e.target.value)}
+                className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-800 outline-none"
+              >
+                <option value="">Select…</option>
+                <option value="Freshman">Freshman</option>
+                <option value="Sophomore">Sophomore</option>
+                <option value="Junior">Junior</option>
+                <option value="Senior">Senior</option>
+                <option value="Graduate">Graduate</option>
+              </select>
+            </div>
+          </div>
+
+          {error && <p className="text-xs text-red-500">{error}</p>}
+
+          <button
+            onClick={handleSave}
+            disabled={loading || !name.trim()}
+            className="w-full py-3 bg-indigo-600 text-white text-sm font-semibold rounded-2xl disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {loading ? 'Saving…' : 'Save Changes'}
+          </button>
+        </div>
+        <div className="h-4" />
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export function ProfilePage() {
   const { currentUser, friends, groups, notifications, unreadCount, togglePrivacyMode, markNotificationsRead, logout } = useApp();
   const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const myGroups = groups.filter((g) => g.isJoined);
   const sharingFriends = friends.filter((f) => f.shareStatus === 'sharing');
@@ -154,7 +268,10 @@ export function ProfilePage() {
                 </div>
               </div>
             </div>
-            <button className="p-2 rounded-xl bg-white/15 hover:bg-white/25 transition-colors">
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="p-2 rounded-xl bg-white/15 hover:bg-white/25 transition-colors"
+            >
               <Edit3 className="w-4 h-4 text-white" />
             </button>
           </div>
@@ -298,6 +415,11 @@ export function ProfilePage() {
           <p className="text-[10px] text-gray-300 mt-1">Westbrook University</p>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      <AnimatePresence>
+        {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
+      </AnimatePresence>
     </div>
   );
 }

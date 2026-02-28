@@ -1,5 +1,6 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from app.auth import get_current_user_id, hash_password, verify_password, create_access_token
 from app.db import get_db, compute_within_fences
 from app.models.auth import LoginRequest, RegisterRequest, TokenResponse
@@ -70,6 +71,54 @@ async def _build_user_profile(db, user_id: str) -> UserProfile:
         friendCount=friend_count,
         groupCount=group_count,
     )
+
+
+# ---------------------------------------------------------------------------
+# User search
+# ---------------------------------------------------------------------------
+
+class UserSearchResult(BaseModel):
+    id: str
+    name: str
+    initials: str
+    avatarColor: str
+    major: str | None = None
+    year: str | None = None
+
+@router.get("/search", response_model=list[UserSearchResult])
+async def search_users(q: str, current_user_id: str = Depends(get_current_user_id)):
+    """Search users by name or email (excludes self and existing friends)."""
+    db = await get_db()
+    try:
+        pattern = f"%{q}%"
+        async with db.execute(
+            """
+            SELECT u.id, u.name, u.initials, u.avatar_color, u.major, u.year
+            FROM users u
+            WHERE u.id != ?
+              AND (u.name LIKE ? OR u.email LIKE ?)
+              AND u.id NOT IN (
+                SELECT friend_id FROM friendships
+                WHERE user_id = ? AND status IN ('accepted', 'pending')
+              )
+            LIMIT 10
+            """,
+            (current_user_id, pattern, pattern, current_user_id),
+        ) as cur:
+            rows = await cur.fetchall()
+        return [
+            UserSearchResult(
+                id=r["id"],
+                name=r["name"],
+                initials=r["initials"],
+                avatarColor=r["avatar_color"],
+                major=r["major"],
+                year=r["year"],
+            )
+            for r in rows
+        ]
+    finally:
+        await db.close()
 
 
 # ---------------------------------------------------------------------------

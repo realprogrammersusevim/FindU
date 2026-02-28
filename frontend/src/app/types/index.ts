@@ -129,3 +129,12 @@ export interface AppNotification {
   timestamp: string;
   isRead: boolean;
 }
+
+export interface UserSearchResult {
+  id: string;
+  name: string;
+  initials: string;
+  avatarColor: string;
+  major?: string;
+  year?: string;
+}

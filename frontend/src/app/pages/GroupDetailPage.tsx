@@ -114,7 +114,7 @@ function RuleEditor({
 export function GroupDetailPage() {
   const { groupId } = useParams();
   const navigate = useNavigate();
-  const { groups, geofences, friends, currentUser, toggleGroupAlerts, updateGroupRules, toggleGroupJoin } =
+  const { groups, geofences, friends, currentUser, toggleGroupAlerts, updateGroupRules, toggleGroupJoin, updateMemberRole, removeMember, disbandGroup } =
     useApp();
 
   const group = groups.find((g) => g.id === groupId);
@@ -484,14 +484,17 @@ export function GroupDetailPage() {
                     <select
                       value={m.role}
                       className="text-xs bg-gray-100 rounded-lg px-2 py-1 outline-none text-gray-600"
-                      onChange={() => {}}
+                      onChange={(e) => updateMemberRole(group.id, m.userId, e.target.value as 'admin' | 'moderator' | 'member')}
                     >
                       <option value="member">Member</option>
                       <option value="moderator">Moderator</option>
                       <option value="admin">Admin</option>
                     </select>
-                    {m.userId !== 'me' && (
-                      <button className="p-1 text-gray-400 hover:text-red-500">
+                    {m.userId !== currentUser.id && (
+                      <button
+                        onClick={() => removeMember(group.id, m.userId)}
+                        className="p-1 text-gray-400 hover:text-red-500"
+                      >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
@@ -503,7 +506,14 @@ export function GroupDetailPage() {
             {/* Danger zone */}
             <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
               <p className="text-sm font-semibold text-red-700 mb-2">Danger Zone</p>
-              <button className="w-full py-2 bg-red-100 text-red-700 text-xs font-semibold rounded-xl hover:bg-red-200 transition-colors">
+              <button
+                onClick={() => {
+                  if (window.confirm(`Disband "${group.name}"? This cannot be undone.`)) {
+                    disbandGroup(group.id).then(() => navigate('/groups'));
+                  }
+                }}
+                className="w-full py-2 bg-red-100 text-red-700 text-xs font-semibold rounded-xl hover:bg-red-200 transition-colors"
+              >
                 Disband Group
               </button>
             </div>

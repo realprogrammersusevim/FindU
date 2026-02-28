@@ -105,6 +105,18 @@ async def send_friend_request(body: SendFriendRequestBody, current_user_id: str 
             await db.commit()
         except Exception:
             raise HTTPException(status_code=409, detail="Request already exists")
+
+        # Notify the recipient
+        async with db.execute("SELECT name FROM users WHERE id = ?", (current_user_id,)) as cur:
+            sender = await cur.fetchone()
+        if sender:
+            notif_id = f"notif-{uuid.uuid4().hex[:8]}"
+            await db.execute(
+                "INSERT INTO notifications VALUES (?,?,?,?,datetime('now'),0)",
+                (notif_id, body.userId, "friend_request", f"{sender['name']} sent you a friend request"),
+            )
+            await db.commit()
+
         return {"id": req_id, "ok": True}
     finally:
         await db.close()

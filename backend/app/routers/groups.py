@@ -10,6 +10,7 @@ from app.models.group import (
     CreateGroupBody,
     ToggleAlertsBody,
     ReplaceRulesBody,
+    UpdateMemberRoleBody,
 )
 
 router = APIRouter()
@@ -208,6 +209,83 @@ async def toggle_alerts(group_id: str, body: ToggleAlertsBody, current_user_id: 
         )
         await db.commit()
         return {"ok": True, "alertsEnabled": body.enabled}
+    finally:
+        await db.close()
+
+
+@router.patch("/{group_id}/members/{user_id}/role")
+async def update_member_role(
+    group_id: str,
+    user_id: str,
+    body: UpdateMemberRoleBody,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    db = await get_db()
+    try:
+        async with db.execute(
+            "SELECT role FROM group_members WHERE group_id = ? AND user_id = ?",
+            (group_id, current_user_id),
+        ) as cur:
+            row = await cur.fetchone()
+        if not row or row["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Admin only")
+
+        await db.execute(
+            "UPDATE group_members SET role = ? WHERE group_id = ? AND user_id = ?",
+            (body.role, group_id, user_id),
+        )
+        await db.commit()
+        return {"ok": True, "role": body.role}
+    finally:
+        await db.close()
+
+
+@router.delete("/{group_id}/members/{user_id}")
+async def remove_member(
+    group_id: str,
+    user_id: str,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    db = await get_db()
+    try:
+        async with db.execute(
+            "SELECT role FROM group_members WHERE group_id = ? AND user_id = ?",
+            (group_id, current_user_id),
+        ) as cur:
+            row = await cur.fetchone()
+        if not row or row["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Admin only")
+        if user_id == current_user_id:
+            raise HTTPException(status_code=400, detail="Cannot remove yourself")
+
+        await db.execute(
+            "DELETE FROM group_members WHERE group_id = ? AND user_id = ?",
+            (group_id, user_id),
+        )
+        await db.commit()
+        return {"ok": True}
+    finally:
+        await db.close()
+
+
+@router.delete("/{group_id}")
+async def disband_group(group_id: str, current_user_id: str = Depends(get_current_user_id)):
+    db = await get_db()
+    try:
+        async with db.execute(
+            "SELECT role FROM group_members WHERE group_id = ? AND user_id = ?",
+            (group_id, current_user_id),
+        ) as cur:
+            row = await cur.fetchone()
+        if not row or row["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Admin only")
+
+        await db.execute("DELETE FROM group_rules WHERE group_id = ?", (group_id,))
+        await db.execute("DELETE FROM group_geofences WHERE group_id = ?", (group_id,))
+        await db.execute("DELETE FROM group_members WHERE group_id = ?", (group_id,))
+        await db.execute("DELETE FROM groups WHERE id = ?", (group_id,))
+        await db.commit()
+        return {"ok": True}
     finally:
         await db.close()
 

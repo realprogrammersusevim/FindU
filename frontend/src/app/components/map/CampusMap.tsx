@@ -1,7 +1,25 @@
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Circle, Marker, Popup } from 'react-leaflet';
+import { useEffect } from 'react';
+import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import type { Geofence, Friend, CurrentUser } from '../../types';
+
+function MapController({
+  centerOverride,
+  zoomOverride,
+}: {
+  centerOverride?: { lat: number; lng: number };
+  zoomOverride?: number;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (centerOverride) {
+      map.flyTo([centerOverride.lat, centerOverride.lng], zoomOverride ?? 17, { duration: 0.8 });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, centerOverride?.lat, centerOverride?.lng, zoomOverride]);
+  return null;
+}
 
 function createAvatarIcon(initials: string, color: string) {
   return L.divIcon({
@@ -84,6 +102,7 @@ interface CampusMapProps {
   geofences: Geofence[];
   friends: Friend[];
   currentUser: CurrentUser;
+  profileLoaded?: boolean;
   activeGeofenceIds?: string[];
   centerOverride?: { lat: number; lng: number };
   zoomOverride?: number;
@@ -94,13 +113,14 @@ export function CampusMap({
   geofences,
   friends,
   currentUser,
+  profileLoaded = false,
   activeGeofenceIds,
   centerOverride,
   zoomOverride,
   height = '100%',
 }: CampusMapProps) {
-  const center = centerOverride || currentUser.position;
-  const zoom = zoomOverride || 15;
+  const initialCenter = currentUser.position;
+  const initialZoom = 15;
 
   const displayGeofences = activeGeofenceIds
     ? geofences.filter((f) => activeGeofenceIds.includes(f.id))
@@ -112,13 +132,13 @@ export function CampusMap({
 
   return (
     <MapContainer
-      key={`${center.lat}-${center.lng}-${zoom}`}
-      center={[center.lat, center.lng]}
-      zoom={zoom}
+      center={[initialCenter.lat, initialCenter.lng]}
+      zoom={initialZoom}
       style={{ width: '100%', height }}
       zoomControl={false}
       attributionControl={false}
     >
+      <MapController centerOverride={centerOverride} zoomOverride={zoomOverride} />
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         maxZoom={19}
@@ -152,8 +172,8 @@ export function CampusMap({
         </Circle>
       ))}
 
-      {/* Current user marker */}
-      {currentUser.currentMode === 'sharing' && (
+      {/* Current user marker — only after real profile is loaded to avoid flashing mock "AC" */}
+      {profileLoaded && currentUser.currentMode === 'sharing' && (
         <Marker
           position={[currentUser.position.lat, currentUser.position.lng]}
           icon={createCurrentUserIcon(currentUser.initials, currentUser.avatarColor)}

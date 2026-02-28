@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import type {
   CurrentUser,
   Friend,
@@ -11,11 +11,16 @@ import type {
   PrivacyMode,
   LocationMode,
   GroupRule,
+  GroupType,
+  UserSearchResult,
 } from '../types';
 import { initialCurrentUser } from '../data/mockData';
 import { apiFetch } from '../api';
 
+export type LocationStatus = 'idle' | 'acquiring' | 'active' | 'denied' | 'unavailable' | 'insecure';
+
 interface AppContextType {
+  profileLoaded: boolean;
   currentUser: CurrentUser;
   friends: Friend[];
   friendRequests: FriendRequest[];
@@ -42,6 +47,14 @@ interface AppContextType {
   toggleFriendFavorite: (friendId: string) => void;
   acceptFriendRequest: (requestId: string) => void;
   declineFriendRequest: (requestId: string) => void;
+  searchUsers: (q: string) => Promise<UserSearchResult[]>;
+  sendFriendRequest: (userId: string) => Promise<void>;
+  createGroup: (data: { name: string; type: GroupType; emoji?: string; description?: string; color?: string }) => Promise<void>;
+  updateProfile: (data: { name?: string; bio?: string; major?: string; year?: string }) => Promise<void>;
+  updateMemberRole: (groupId: string, userId: string, role: 'admin' | 'moderator' | 'member') => Promise<void>;
+  removeMember: (groupId: string, userId: string) => Promise<void>;
+  disbandGroup: (groupId: string) => Promise<void>;
+  locationStatus: LocationStatus;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -81,6 +94,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
   const isAuthenticated = !!authToken;
 
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [currentUser, setCurrentUser] = useState<CurrentUser>(initialCurrentUser);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
@@ -102,6 +116,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (profileRes.ok) {
       const data = await profileRes.json();
       setCurrentUser(prev => ({ ...prev, ..._mapProfile(data) }));
+      setProfileLoaded(true);
     }
     if (schedRes.ok) {
       const { slots, exceptions } = await schedRes.json();
@@ -127,6 +142,94 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!authToken) return;
     loadAll().catch(() => {/* ignore network errors on startup */});
   }, []); // run once on mount
+
+  // GPS tracking state
+  const [locationStatus, setLocationStatus] = useState<LocationStatus>('idle');
+  const watchIdRef = useRef<number | null>(null);
+  const backendDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFirstFixRef = useRef(true);
+
+  useEffect(() => {
+    // Stop watching if logged out
+    if (!authToken) {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation?.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      setLocationStatus('idle');
+      return;
+    }
+
+    if (!window.isSecureContext) {
+      // Geolocation requires HTTPS (or localhost). Accessing via http://IP will
+      // always fail on modern browsers / iOS Safari regardless of permissions.
+      setLocationStatus('insecure');
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      setLocationStatus('unavailable');
+      return;
+    }
+
+    if (currentUser.currentMode !== 'sharing') {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      setLocationStatus('idle');
+      return;
+    }
+
+    // Already watching — don't register a second watcher
+    if (watchIdRef.current !== null) return;
+
+    setLocationStatus('acquiring');
+    isFirstFixRef.current = true;
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+
+        setLocationStatus('active');
+        setCurrentUser(prev => ({ ...prev, position: { lat, lng } }));
+
+        // Write first fix immediately; debounce subsequent ones to ~5 s
+        if (isFirstFixRef.current) {
+          isFirstFixRef.current = false;
+          apiFetch('/users/me/location', {
+            method: 'PATCH',
+            body: JSON.stringify({ lat, lng }),
+          }).catch(() => {});
+        } else {
+          if (backendDebounceRef.current) clearTimeout(backendDebounceRef.current);
+          backendDebounceRef.current = setTimeout(() => {
+            apiFetch('/users/me/location', {
+              method: 'PATCH',
+              body: JSON.stringify({ lat, lng }),
+            }).catch(() => {});
+          }, 5_000);
+        }
+      },
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocationStatus('denied');
+        } else {
+          setLocationStatus('unavailable');
+        }
+        console.warn('Geolocation error:', err.message);
+      },
+      { enableHighAccuracy: true, maximumAge: 10_000, timeout: 15_000 },
+    );
+
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      if (backendDebounceRef.current) clearTimeout(backendDebounceRef.current);
+    };
+  }, [authToken, currentUser.currentMode]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -460,6 +563,97 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
   }, [friendRequests]);
 
+  const searchUsers = useCallback(async (q: string): Promise<UserSearchResult[]> => {
+    const res = await apiFetch(`/users/search?q=${encodeURIComponent(q)}`);
+    if (!res.ok) return [];
+    return res.json();
+  }, []);
+
+  const sendFriendRequest = useCallback(async (userId: string): Promise<void> => {
+    const res = await apiFetch('/friends/requests', {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail ?? 'Failed to send friend request');
+    }
+  }, []);
+
+  const createGroup = useCallback(async (data: { name: string; type: GroupType; emoji?: string; description?: string; color?: string }): Promise<void> => {
+    const res = await apiFetch('/groups/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.detail ?? 'Failed to create group');
+    }
+    const newGroup: Group = await res.json();
+    setGroups(prev => [newGroup, ...prev]);
+  }, []);
+
+  const updateProfile = useCallback(async (data: { name?: string; bio?: string; major?: string; year?: string }): Promise<void> => {
+    const res = await apiFetch('/users/me', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.detail ?? 'Failed to update profile');
+    }
+    const updated = await res.json();
+    setCurrentUser(prev => ({ ...prev, ..._mapProfile(updated) }));
+  }, []);
+
+  const updateMemberRole = useCallback(async (groupId: string, userId: string, role: 'admin' | 'moderator' | 'member'): Promise<void> => {
+    // Optimistic update
+    setGroups(prev =>
+      prev.map(g =>
+        g.id === groupId
+          ? { ...g, members: g.members.map(m => m.userId === userId ? { ...m, role } : m) }
+          : g
+      )
+    );
+    const res = await apiFetch(`/groups/${groupId}/members/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    });
+    if (!res.ok) {
+      // Revert by reloading group
+      apiFetch(`/groups/${groupId}`).then(r => r.ok ? r.json() : null).then(data => {
+        if (data) setGroups(prev => prev.map(g => g.id === groupId ? data : g));
+      });
+    }
+  }, []);
+
+  const removeMember = useCallback(async (groupId: string, userId: string): Promise<void> => {
+    // Optimistic update
+    setGroups(prev =>
+      prev.map(g =>
+        g.id === groupId
+          ? { ...g, members: g.members.filter(m => m.userId !== userId), memberCount: g.memberCount - 1 }
+          : g
+      )
+    );
+    const res = await apiFetch(`/groups/${groupId}/members/${userId}`, { method: 'DELETE' });
+    if (!res.ok) {
+      // Revert
+      apiFetch(`/groups/${groupId}`).then(r => r.ok ? r.json() : null).then(data => {
+        if (data) setGroups(prev => prev.map(g => g.id === groupId ? data : g));
+      });
+    }
+  }, []);
+
+  const disbandGroup = useCallback(async (groupId: string): Promise<void> => {
+    const res = await apiFetch(`/groups/${groupId}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.detail ?? 'Failed to disband group');
+    }
+    setGroups(prev => prev.filter(g => g.id !== groupId));
+  }, []);
+
   const toggleFriendFavorite = useCallback((friendId: string) => {
     const friend = friends.find(f => f.id === friendId);
     if (!friend) return;
@@ -491,6 +685,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <AppContext.Provider
       value={{
+        profileLoaded,
         currentUser,
         friends,
         friendRequests,
@@ -517,6 +712,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         toggleFriendFavorite,
         acceptFriendRequest,
         declineFriendRequest,
+        searchUsers,
+        sendFriendRequest,
+        createGroup,
+        updateProfile,
+        updateMemberRole,
+        removeMember,
+        disbandGroup,
+        locationStatus,
       }}
     >
       {children}
