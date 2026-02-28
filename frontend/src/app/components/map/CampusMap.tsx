@@ -47,22 +47,6 @@ function createAvatarIcon(initials: string, color: string) {
   });
 }
 
-function createBinaryIcon(initials: string, color: string) {
-  return L.divIcon({
-    html: `<div style="
-      width:36px;height:36px;border-radius:50%;
-      background:${color}55;
-      border:3px dashed ${color};
-      display:flex;align-items:center;justify-content:center;
-      color:${color};font-size:12px;font-weight:700;
-      font-family:system-ui,sans-serif;
-    ">${initials}</div>`,
-    className: '',
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -20],
-  });
-}
 
 function createCurrentUserIcon(initials: string, color: string) {
   return L.divIcon({
@@ -190,33 +174,7 @@ export function CampusMap({
       {/* Friend markers */}
       {visibleFriends.map((friend) => {
         if (!friend.location) return null;
-
-        if (friend.location.mode === 'binary') {
-          // Binary mode: show on geofence boundary area
-          const primaryFence = geofences.find((f) =>
-            friend.location!.withinFences.includes(f.id)
-          );
-          if (!primaryFence) return null;
-          const offset = 0.0006;
-          return (
-            <Marker
-              key={friend.id}
-              position={[primaryFence.center.lat + offset, primaryFence.center.lng - offset]}
-              icon={createBinaryIcon(friend.initials, friend.avatarColor)}
-            >
-              <Popup>
-                <div style={{ fontFamily: 'system-ui', fontSize: '13px', minWidth: '130px' }}>
-                  <div style={{ fontWeight: 700 }}>{friend.name}</div>
-                  <div style={{ color: '#6B7280', fontSize: '11px' }}>{friend.major}</div>
-                  <div style={{ color: '#6366F1', marginTop: '3px', fontSize: '11px' }}>
-                    📍 Inside {primaryFence.name}
-                  </div>
-                  <div style={{ color: '#9CA3AF', fontSize: '10px' }}>Exact location hidden</div>
-                </div>
-              </Popup>
-            </Marker>
-          );
-        }
+        if (friend.location.mode === 'binary') return null;
 
         return (
           <Marker

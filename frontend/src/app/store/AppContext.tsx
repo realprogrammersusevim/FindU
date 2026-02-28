@@ -143,6 +143,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     loadAll().catch(() => {/* ignore network errors on startup */});
   }, []); // run once on mount
 
+  // Poll friend locations every 15 s so locationMode/position changes propagate
+  useEffect(() => {
+    if (!authToken) return;
+    const id = setInterval(async () => {
+      const res = await apiFetch('/friends/');
+      if (res.ok) setFriends(await res.json());
+    }, 15_000);
+    return () => clearInterval(id);
+  }, [authToken]);
+
   // GPS tracking state
   const [locationStatus, setLocationStatus] = useState<LocationStatus>('idle');
   const watchIdRef = useRef<number | null>(null);
