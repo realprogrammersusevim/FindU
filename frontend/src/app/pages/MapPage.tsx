@@ -193,38 +193,35 @@ export function MapPage() {
         />
       </div>
 
-      {/* Geofence Filter Pills */}
-      <div className="absolute left-0 right-0 z-[999]" style={{ bottom: '140px' }}>
-        <div
-          className="flex gap-2 px-3 overflow-x-auto"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          <button
-            onClick={() => setFenceFilter(null)}
-            className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all shadow-sm ${
-              !fenceFilter ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
-            }`}
-          >
-            <Filter className="w-3 h-3" />
-            All
-          </button>
-          {geofences.map((fence) => (
-            <button
-              key={fence.id}
-              onClick={() => setFenceFilter(fence.id === fenceFilter ? null : fence.id)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all shadow-sm ${
-                fenceFilter === fence.id ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600'
-              }`}
-            >
-              {fence.icon} {fence.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Bottom Friends Sheet */}
       <div className="absolute left-0 right-0 bottom-0 z-[999]">
         <div className="bg-white rounded-t-3xl shadow-2xl border-t border-gray-100">
+          {/* Geofence Filter Pills */}
+          <div
+            className="flex gap-2 px-3 pt-3 pb-1 overflow-x-auto"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            <button
+              onClick={() => setFenceFilter(null)}
+              className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all shadow-sm ${
+                !fenceFilter ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600'
+              }`}
+            >
+              <Filter className="w-3 h-3" />
+              All
+            </button>
+            {geofences.map((fence) => (
+              <button
+                key={fence.id}
+                onClick={() => setFenceFilter(fence.id === fenceFilter ? null : fence.id)}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all shadow-sm ${
+                  fenceFilter === fence.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                {fence.icon} {fence.name}
+              </button>
+            ))}
+          </div>
           <button
             onClick={() => setBottomOpen(!bottomOpen)}
             className="w-full flex items-center justify-between px-5 py-3"
