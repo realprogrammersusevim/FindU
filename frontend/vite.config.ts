@@ -16,4 +16,7 @@ export default defineConfig({
   },
 
   assetsInclude: ['**/*.svg', '**/*.csv'],
+  server: {
+    allowedHosts: ['.ngrok-free.app', '.ngrok-free.dev'],
+  },
 })
