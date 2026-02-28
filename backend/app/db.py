@@ -1,14 +1,15 @@
 import math
 import aiosqlite
 import bcrypt as _bcrypt
+from typing import AsyncGenerator
 
 DB_PATH = "findu.db"
 
 
-async def get_db() -> aiosqlite.Connection:
-    db = await aiosqlite.connect(DB_PATH)
-    db.row_factory = aiosqlite.Row
-    return db
+async def get_db() -> AsyncGenerator[aiosqlite.Connection, None]:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        yield db
 
 
 # ---------------------------------------------------------------------------
@@ -128,36 +129,198 @@ CREATE TABLE IF NOT EXISTS notifications (
 # Seed helpers
 # ---------------------------------------------------------------------------
 
-def _point_in_circle(lat: float, lng: float, center_lat: float, center_lng: float, radius_m: float) -> bool:
+
+def _point_in_circle(
+    lat: float, lng: float, center_lat: float, center_lng: float, radius_m: float
+) -> bool:
     """Haversine distance check."""
     R = 6_371_000
     phi1 = math.radians(lat)
     phi2 = math.radians(center_lat)
     dphi = math.radians(center_lat - lat)
     dlam = math.radians(center_lng - lng)
-    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
+    a = (
+        math.sin(dphi / 2) ** 2
+        + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
+    )
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a)) <= radius_m
 
 
 SEED_GEOFENCES = [
-    ("fence-campus",    "Main Campus",          40.8207, -96.7005, 560,  "#6366F1", "🎓", "University of Nebraska-Lincoln main campus boundary"),
-    ("fence-north-dorm","North Dorm Complex",   40.8200, -96.6960, 160,  "#8B5CF6", "🏠", "North residential dormitory complex"),
-    ("fence-library",   "Love Library",         40.8175, -96.7025,  95,  "#EC4899", "📚", "Main UNL library building"),
-    ("fence-athletic",  "Campus Recreation Center", 40.8180, -96.6980, 115,  "#F59E0B", "🏋️", "Athletic and recreation center"),
+    (
+        "fence-campus",
+        "Main Campus",
+        40.8207,
+        -96.7005,
+        560,
+        "#6366F1",
+        "🎓",
+        "University of Nebraska-Lincoln main campus boundary",
+    ),
+    (
+        "fence-north-dorm",
+        "North Dorm Complex",
+        40.8200,
+        -96.6960,
+        160,
+        "#8B5CF6",
+        "🏠",
+        "North residential dormitory complex",
+    ),
+    (
+        "fence-library",
+        "Love Library",
+        40.8175,
+        -96.7025,
+        95,
+        "#EC4899",
+        "📚",
+        "Main UNL library building",
+    ),
+    (
+        "fence-athletic",
+        "Campus Recreation Center",
+        40.8180,
+        -96.6980,
+        115,
+        "#F59E0B",
+        "🏋️",
+        "Athletic and recreation center",
+    ),
 ]
 
 _PW_HASH = _bcrypt.hashpw(b"password", _bcrypt.gensalt()).decode()
 
 SEED_USERS = [
     # (id, name, initials, avatar_color, email, password_hash, major, year, bio, lat, lng, current_mode, mode_updated_at, location_mode)
-    ("me",        "Alex Chen",     "AC", "#6366F1", "alex@unl.edu",  _PW_HASH, "Computer Science",       "Junior",    "CS student at University of Nebraska-Lincoln. Passionate about algorithms, coffee, and weekend soccer.", 40.8205, -96.7000, "sharing", "2026-02-28 00:00:00", "exact"),
-    ("friend-1",  "Sarah Kim",     "SK", "#EC4899", "sarah@unl.edu", _PW_HASH, "Computer Science",       "Junior",    None, 40.8200, -96.7010, "sharing", "2026-02-28 00:00:00", "exact"),
-    ("friend-2",  "Jake Williams", "JW", "#3B82F6", "jake@unl.edu",  _PW_HASH, "Mechanical Engineering", "Senior",    None, 40.8185, -96.6985, "sharing", "2026-02-28 00:00:00", "binary"),
-    ("friend-3",  "Maya Patel",    "MP", "#10B981", "maya@unl.edu",  _PW_HASH, "Biology",                "Sophomore", None, None,    None,     "private", "2026-02-28 00:00:00", "exact"),
-    ("friend-4",  "Tyler Johnson", "TJ", "#F97316", "tyler@unl.edu", _PW_HASH, "Psychology",             "Senior",    None, 40.8210, -96.6965, "sharing", "2026-02-28 00:00:00", "exact"),
-    ("friend-5",  "Emma Davis",    "ED", "#8B5CF6", "emma@unl.edu",  _PW_HASH, "Mathematics",            "Junior",    None, 40.8170, -96.7020, "sharing", "2026-02-28 00:00:00", "exact"),
-    ("friend-6",  "Chris Park",    "CP", "#6B7280", "chris@unl.edu", _PW_HASH, "Fine Arts",              "Freshman",  None, None,    None,     "private", "2026-02-28 00:00:00", "exact"),
-    ("friend-7",  "Lily Chen",     "LC", "#14B8A6", "lily@unl.edu",  _PW_HASH, "Pre-Med",                "Sophomore", None, 40.8220, -96.7015, "sharing", "2026-02-28 00:00:00", "binary"),
+    (
+        "me",
+        "Alex Chen",
+        "AC",
+        "#6366F1",
+        "alex@unl.edu",
+        _PW_HASH,
+        "Computer Science",
+        "Junior",
+        "CS student at University of Nebraska-Lincoln. Passionate about algorithms, coffee, and weekend soccer.",
+        40.8205,
+        -96.7000,
+        "sharing",
+        "2026-02-28 00:00:00",
+        "exact",
+    ),
+    (
+        "friend-1",
+        "Sarah Kim",
+        "SK",
+        "#EC4899",
+        "sarah@unl.edu",
+        _PW_HASH,
+        "Computer Science",
+        "Junior",
+        None,
+        40.8200,
+        -96.7010,
+        "sharing",
+        "2026-02-28 00:00:00",
+        "exact",
+    ),
+    (
+        "friend-2",
+        "Jake Williams",
+        "JW",
+        "#3B82F6",
+        "jake@unl.edu",
+        _PW_HASH,
+        "Mechanical Engineering",
+        "Senior",
+        None,
+        40.8185,
+        -96.6985,
+        "sharing",
+        "2026-02-28 00:00:00",
+        "binary",
+    ),
+    (
+        "friend-3",
+        "Maya Patel",
+        "MP",
+        "#10B981",
+        "maya@unl.edu",
+        _PW_HASH,
+        "Biology",
+        "Sophomore",
+        None,
+        None,
+        None,
+        "private",
+        "2026-02-28 00:00:00",
+        "exact",
+    ),
+    (
+        "friend-4",
+        "Tyler Johnson",
+        "TJ",
+        "#F97316",
+        "tyler@unl.edu",
+        _PW_HASH,
+        "Psychology",
+        "Senior",
+        None,
+        40.8210,
+        -96.6965,
+        "sharing",
+        "2026-02-28 00:00:00",
+        "exact",
+    ),
+    (
+        "friend-5",
+        "Emma Davis",
+        "ED",
+        "#8B5CF6",
+        "emma@unl.edu",
+        _PW_HASH,
+        "Mathematics",
+        "Junior",
+        None,
+        40.8170,
+        -96.7020,
+        "sharing",
+        "2026-02-28 00:00:00",
+        "exact",
+    ),
+    (
+        "friend-6",
+        "Chris Park",
+        "CP",
+        "#6B7280",
+        "chris@unl.edu",
+        _PW_HASH,
+        "Fine Arts",
+        "Freshman",
+        None,
+        None,
+        None,
+        "private",
+        "2026-02-28 00:00:00",
+        "exact",
+    ),
+    (
+        "friend-7",
+        "Lily Chen",
+        "LC",
+        "#14B8A6",
+        "lily@unl.edu",
+        _PW_HASH,
+        "Pre-Med",
+        "Sophomore",
+        None,
+        40.8220,
+        -96.7015,
+        "sharing",
+        "2026-02-28 00:00:00",
+        "binary",
+    ),
 ]
 
 SEED_FRIENDSHIPS = [
@@ -172,43 +335,84 @@ SEED_FRIENDSHIPS = [
 ]
 
 SEED_GROUPS = [
-    ("group-1", "Alpha Phi Omega", "greek",  "🏛️", "National co-ed service fraternity. Weekly meetings, community service and campus events.", "#6366F1"),
-    ("group-2", "Women in STEM",   "club",   "🔬", "Supporting and empowering women in science, technology, engineering, and mathematics.",      "#EC4899"),
-    ("group-3", "Soccer Club",     "sports", "⚽", "Casual and competitive soccer for all skill levels. Practice 3x weekly at the athletic center.", "#10B981"),
-    ("group-4", "CS 301 Study Group", "class","💻","Study group for Algorithm Design and Analysis. Meets in the library on study nights.",       "#F59E0B"),
-    ("group-5", "Photography Club","club",   "📷", "Explore campus and beyond with your camera. All skill levels welcome.",                       "#8B5CF6"),
-    ("group-6", "Delta Sigma Pi",  "greek",  "🔱", "Professional business fraternity fostering leadership and community involvement.",             "#0EA5E9"),
+    (
+        "group-1",
+        "Alpha Phi Omega",
+        "greek",
+        "🏛️",
+        "National co-ed service fraternity. Weekly meetings, community service and campus events.",
+        "#6366F1",
+    ),
+    (
+        "group-2",
+        "Women in STEM",
+        "club",
+        "🔬",
+        "Supporting and empowering women in science, technology, engineering, and mathematics.",
+        "#EC4899",
+    ),
+    (
+        "group-3",
+        "Soccer Club",
+        "sports",
+        "⚽",
+        "Casual and competitive soccer for all skill levels. Practice 3x weekly at the athletic center.",
+        "#10B981",
+    ),
+    (
+        "group-4",
+        "CS 301 Study Group",
+        "class",
+        "💻",
+        "Study group for Algorithm Design and Analysis. Meets in the library on study nights.",
+        "#F59E0B",
+    ),
+    (
+        "group-5",
+        "Photography Club",
+        "club",
+        "📷",
+        "Explore campus and beyond with your camera. All skill levels welcome.",
+        "#8B5CF6",
+    ),
+    (
+        "group-6",
+        "Delta Sigma Pi",
+        "greek",
+        "🔱",
+        "Professional business fraternity fostering leadership and community involvement.",
+        "#0EA5E9",
+    ),
 ]
 
 SEED_GROUP_MEMBERS = [
     # (id, group_id, user_id, role, alerts_enabled)
-    ("gm-1-me",  "group-1", "me",       "admin",     1),
-    ("gm-1-1",   "group-1", "friend-1", "member",    1),
-    ("gm-1-2",   "group-1", "friend-2", "moderator", 1),
-    ("gm-1-5",   "group-1", "friend-5", "member",    1),
-    ("gm-1-7",   "group-1", "friend-7", "member",    1),
-
-    ("gm-2-me",  "group-2", "me",       "member",    1),
-    ("gm-2-1",   "group-2", "friend-1", "admin",     1),
-    ("gm-2-3",   "group-2", "friend-3", "member",    1),
-    ("gm-2-5",   "group-2", "friend-5", "moderator", 1),
-    ("gm-2-7",   "group-2", "friend-7", "member",    1),
-
-    ("gm-3-2",   "group-3", "friend-2", "admin",     1),
-    ("gm-3-me",  "group-3", "me",       "member",    0),
-    ("gm-3-4",   "group-3", "friend-4", "member",    0),
-    ("gm-3-6",   "group-3", "friend-6", "member",    0),
-
-    ("gm-4-me",  "group-4", "me",       "admin",     1),
-    ("gm-4-1",   "group-4", "friend-1", "member",    1),
-    ("gm-4-5",   "group-4", "friend-5", "member",    1),
-    ("gm-4-3",   "group-4", "friend-3", "member",    1),
+    ("gm-1-me", "group-1", "me", "admin", 1),
+    ("gm-1-1", "group-1", "friend-1", "member", 1),
+    ("gm-1-2", "group-1", "friend-2", "moderator", 1),
+    ("gm-1-5", "group-1", "friend-5", "member", 1),
+    ("gm-1-7", "group-1", "friend-7", "member", 1),
+    ("gm-2-me", "group-2", "me", "member", 1),
+    ("gm-2-1", "group-2", "friend-1", "admin", 1),
+    ("gm-2-3", "group-2", "friend-3", "member", 1),
+    ("gm-2-5", "group-2", "friend-5", "moderator", 1),
+    ("gm-2-7", "group-2", "friend-7", "member", 1),
+    ("gm-3-2", "group-3", "friend-2", "admin", 1),
+    ("gm-3-me", "group-3", "me", "member", 0),
+    ("gm-3-4", "group-3", "friend-4", "member", 0),
+    ("gm-3-6", "group-3", "friend-6", "member", 0),
+    ("gm-4-me", "group-4", "me", "admin", 1),
+    ("gm-4-1", "group-4", "friend-1", "member", 1),
+    ("gm-4-5", "group-4", "friend-5", "member", 1),
+    ("gm-4-3", "group-4", "friend-3", "member", 1),
 ]
 
 SEED_GROUP_GEOFENCES = [
     ("group-1", "fence-campus"),
-    ("group-2", "fence-campus"), ("group-2", "fence-library"),
-    ("group-3", "fence-campus"), ("group-3", "fence-athletic"),
+    ("group-2", "fence-campus"),
+    ("group-2", "fence-library"),
+    ("group-3", "fence-campus"),
+    ("group-3", "fence-athletic"),
     ("group-4", "fence-library"),
     ("group-5", "fence-campus"),
     ("group-6", "fence-campus"),
@@ -216,34 +420,147 @@ SEED_GROUP_GEOFENCES = [
 
 SEED_GROUP_RULES = [
     # (id, group_id, days_json, start, end, location_mode, label)
-    ("rule-1", "group-1", '["Mon","Wed","Fri"]', "09:00", "21:00", "exact",  "Chapter Meeting Hours"),
-    ("rule-2", "group-1", '["Sat","Sun"]',        "10:00", "18:00", "binary", "Weekend Events"),
-    ("rule-3", "group-2", '["Tue","Thu"]',         "16:00", "19:00", "exact",  "Meeting Hours"),
-    ("rule-4", "group-3", '["Mon","Wed","Fri"]',   "15:00", "17:30", "exact",  "Practice Hours"),
-    ("rule-5", "group-4", '["Sun","Tue","Thu"]',   "18:00", "22:00", "binary", "Study Sessions"),
-    ("rule-6", "group-5", '["Sat"]',               "09:00", "15:00", "binary", "Saturday Photo Walks"),
-    ("rule-7", "group-6", '["Tue","Thu"]',          "18:00", "22:00", "exact",  "Chapter Hours"),
+    (
+        "rule-1",
+        "group-1",
+        '["Mon","Wed","Fri"]',
+        "09:00",
+        "21:00",
+        "exact",
+        "Chapter Meeting Hours",
+    ),
+    (
+        "rule-2",
+        "group-1",
+        '["Sat","Sun"]',
+        "10:00",
+        "18:00",
+        "binary",
+        "Weekend Events",
+    ),
+    ("rule-3", "group-2", '["Tue","Thu"]', "16:00", "19:00", "exact", "Meeting Hours"),
+    (
+        "rule-4",
+        "group-3",
+        '["Mon","Wed","Fri"]',
+        "15:00",
+        "17:30",
+        "exact",
+        "Practice Hours",
+    ),
+    (
+        "rule-5",
+        "group-4",
+        '["Sun","Tue","Thu"]',
+        "18:00",
+        "22:00",
+        "binary",
+        "Study Sessions",
+    ),
+    (
+        "rule-6",
+        "group-5",
+        '["Sat"]',
+        "09:00",
+        "15:00",
+        "binary",
+        "Saturday Photo Walks",
+    ),
+    ("rule-7", "group-6", '["Tue","Thu"]', "18:00", "22:00", "exact", "Chapter Hours"),
 ]
 
 SEED_SCHEDULE_SLOTS = [
     # (id, user_id, days_json, start, end, mode, label, is_default, is_active)
-    ("slot-1", "me", '["Mon","Tue","Wed","Thu","Fri"]', "08:00", "22:00", "sharing", "Weekday Active",  1, 1),
-    ("slot-2", "me", '["Sat","Sun"]',                   "10:00", "20:00", "sharing", "Weekend Active",  1, 1),
-    ("slot-3", "me", '["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]', "22:00", "08:00", "private", "Night Privacy", 1, 1),
+    (
+        "slot-1",
+        "me",
+        '["Mon","Tue","Wed","Thu","Fri"]',
+        "08:00",
+        "22:00",
+        "sharing",
+        "Weekday Active",
+        1,
+        1,
+    ),
+    (
+        "slot-2",
+        "me",
+        '["Sat","Sun"]',
+        "10:00",
+        "20:00",
+        "sharing",
+        "Weekend Active",
+        1,
+        1,
+    ),
+    (
+        "slot-3",
+        "me",
+        '["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]',
+        "22:00",
+        "08:00",
+        "private",
+        "Night Privacy",
+        1,
+        1,
+    ),
 ]
 
 SEED_SCHEDULE_EXCEPTIONS = [
     # (id, user_id, date, start, end, mode, note)
-    ("exc-1", "me", "2026-03-01", "20:00", "23:59", "sharing", "Greek life mixer event — staying visible"),
+    (
+        "exc-1",
+        "me",
+        "2026-03-01",
+        "20:00",
+        "23:59",
+        "sharing",
+        "Greek life mixer event — staying visible",
+    ),
 ]
 
 SEED_NOTIFICATIONS = [
     # (id, user_id, type, message, timestamp, is_read)
-    ("notif-1", "me", "entered_fence", "Sarah Kim entered Main Campus",        "2026-02-28 10:58:00", 0),
-    ("notif-2", "me", "entered_fence", "Jake Williams entered Campus Recreation Center", "2026-02-28 10:55:00", 0),
-    ("notif-3", "me", "group_invite",  "You've been invited to join Film Society", "2026-02-28 09:00:00", 1),
-    ("notif-4", "me", "left_fence",    "Tyler Johnson left Love Library",        "2026-02-28 08:00:00", 1),
-    ("notif-5", "me", "entered_fence", "Emma Davis entered Love Library", "2026-02-28 07:00:00", 1),
+    (
+        "notif-1",
+        "me",
+        "entered_fence",
+        "Sarah Kim entered Main Campus",
+        "2026-02-28 10:58:00",
+        0,
+    ),
+    (
+        "notif-2",
+        "me",
+        "entered_fence",
+        "Jake Williams entered Campus Recreation Center",
+        "2026-02-28 10:55:00",
+        0,
+    ),
+    (
+        "notif-3",
+        "me",
+        "group_invite",
+        "You've been invited to join Film Society",
+        "2026-02-28 09:00:00",
+        1,
+    ),
+    (
+        "notif-4",
+        "me",
+        "left_fence",
+        "Tyler Johnson left Love Library",
+        "2026-02-28 08:00:00",
+        1,
+    ),
+    (
+        "notif-5",
+        "me",
+        "entered_fence",
+        "Emma Davis entered Love Library",
+        "2026-02-28 07:00:00",
+        1,
+    ),
 ]
 
 
@@ -306,11 +623,15 @@ async def init_db() -> None:
 # Utility
 # ---------------------------------------------------------------------------
 
-def compute_within_fences(lat: float | None, lng: float | None, all_fences: list) -> list[str]:
+
+def compute_within_fences(
+    lat: float | None, lng: float | None, all_fences: list
+) -> list[str]:
     """Return list of geofence IDs the point falls inside."""
     if lat is None or lng is None:
         return []
     return [
-        f["id"] for f in all_fences
+        f["id"]
+        for f in all_fences
         if _point_in_circle(lat, lng, f["center_lat"], f["center_lng"], f["radius"])
     ]

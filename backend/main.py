@@ -27,11 +27,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(users.router,         prefix="/users",         tags=["users"])
-app.include_router(friends.router,       prefix="/friends",       tags=["friends"])
-app.include_router(groups.router,        prefix="/groups",        tags=["groups"])
-app.include_router(geofences.router,     prefix="/geofences",     tags=["geofences"])
-app.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
+app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(friends.router, prefix="/friends", tags=["friends"])
+app.include_router(groups.router, prefix="/groups", tags=["groups"])
+app.include_router(geofences.router, prefix="/geofences", tags=["geofences"])
+app.include_router(
+    notifications.router, prefix="/notifications", tags=["notifications"]
+)
 
 
 @app.get("/health")
