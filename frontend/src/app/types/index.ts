@@ -113,6 +113,15 @@ export interface CurrentUser {
   groupCount: number;
 }
 
+export interface FriendRequest {
+  id: string;
+  fromUserId: string;
+  fromName: string;
+  fromInitials: string;
+  fromAvatarColor: string;
+  createdAt: string;
+}
+
 export interface AppNotification {
   id: string;
   type: 'entered_fence' | 'left_fence' | 'friend_request' | 'group_invite' | 'alert';
