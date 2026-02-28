@@ -3,6 +3,7 @@ frontend/dist
 frontend/node_modules
 
 # Backend
+backend/findu.db
 backend/__pycache__
 backend/**/__pycache__
 backend/.venv
