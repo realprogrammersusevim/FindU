@@ -162,7 +162,7 @@ function FriendCard({ friend, onToggleFavorite }: { friend: Friend; onToggleFavo
 }
 
 export function FriendsPage() {
-  const { friends, toggleFriendFavorite } = useApp();
+  const { friends, friendRequests, toggleFriendFavorite, acceptFriendRequest, declineFriendRequest } = useApp();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'sharing' | 'private' | 'offline'>('all');
   const navigate = useNavigate();
@@ -272,32 +272,43 @@ export function FriendsPage() {
         )}
 
         {/* Friend requests */}
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-4 border border-indigo-100">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-indigo-800">Friend Requests</span>
-            <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">2 new</span>
+        {friendRequests.length > 0 && (
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-4 border border-indigo-100">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold text-indigo-800">Friend Requests</span>
+              <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">{friendRequests.length} new</span>
+            </div>
+            <div className="space-y-2">
+              {friendRequests.map((req) => (
+                <div key={req.id} className="flex items-center gap-3">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                    style={{ backgroundColor: req.fromAvatarColor }}
+                  >
+                    {req.fromInitials}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-gray-800">{req.fromName}</p>
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => acceptFriendRequest(req.id)}
+                      className="px-2.5 py-1 bg-indigo-600 text-white text-[10px] font-semibold rounded-lg"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => declineFriendRequest(req.id)}
+                      className="px-2.5 py-1 bg-gray-100 text-gray-600 text-[10px] font-semibold rounded-lg"
+                    >
+                      Decline
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="space-y-2">
-            {[
-              { name: 'Jordan Lee', major: 'Physics', mutual: 4 },
-              { name: 'Priya Sharma', major: 'Chemistry', mutual: 2 },
-            ].map((req) => (
-              <div key={req.name} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                  {req.name.split(' ').map((n) => n[0]).join('')}
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs font-semibold text-gray-800">{req.name}</p>
-                  <p className="text-[10px] text-gray-400">{req.mutual} mutual friends</p>
-                </div>
-                <div className="flex gap-1">
-                  <button className="px-2.5 py-1 bg-indigo-600 text-white text-[10px] font-semibold rounded-lg">Accept</button>
-                  <button className="px-2.5 py-1 bg-gray-100 text-gray-600 text-[10px] font-semibold rounded-lg">Decline</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

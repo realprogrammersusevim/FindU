@@ -139,24 +139,24 @@ def _point_in_circle(lat: float, lng: float, center_lat: float, center_lng: floa
 
 
 SEED_GEOFENCES = [
-    ("fence-campus",    "Main Campus",          40.7282, -73.7949, 560,  "#6366F1", "🎓", "Westbrook University main campus boundary"),
-    ("fence-north-dorm","North Dorm Complex",   40.7322, -73.7968, 160,  "#8B5CF6", "🏠", "North residential dormitory complex"),
-    ("fence-library",   "University Library",   40.7268, -73.7960,  95,  "#EC4899", "📚", "Main university library building"),
-    ("fence-athletic",  "Athletic Center",      40.7297, -73.7926, 115,  "#F59E0B", "🏋️", "Athletic and recreation center"),
+    ("fence-campus",    "Main Campus",          40.8207, -96.7005, 560,  "#6366F1", "🎓", "University of Nebraska-Lincoln main campus boundary"),
+    ("fence-north-dorm","North Dorm Complex",   40.8200, -96.6960, 160,  "#8B5CF6", "🏠", "North residential dormitory complex"),
+    ("fence-library",   "Love Library",         40.8175, -96.7025,  95,  "#EC4899", "📚", "Main UNL library building"),
+    ("fence-athletic",  "Campus Recreation Center", 40.8180, -96.6980, 115,  "#F59E0B", "🏋️", "Athletic and recreation center"),
 ]
 
 _PW_HASH = _bcrypt.hashpw(b"password", _bcrypt.gensalt()).decode()
 
 SEED_USERS = [
     # (id, name, initials, avatar_color, email, password_hash, major, year, bio, lat, lng, current_mode, location_mode)
-    ("me",        "Alex Chen",     "AC", "#6366F1", "alex@westbrook.edu",  _PW_HASH, "Computer Science",       "Junior",    "CS student at Westbrook University. Passionate about algorithms, coffee, and weekend soccer.", 40.7280, -73.7948, "sharing", "exact"),
-    ("friend-1",  "Sarah Kim",     "SK", "#EC4899", "sarah@westbrook.edu", _PW_HASH, "Computer Science",       "Junior",    None, 40.7278, -73.7942, "sharing", "exact"),
-    ("friend-2",  "Jake Williams", "JW", "#3B82F6", "jake@westbrook.edu",  _PW_HASH, "Mechanical Engineering", "Senior",    None, 40.7293, -73.7924, "sharing", "binary"),
-    ("friend-3",  "Maya Patel",    "MP", "#10B981", "maya@westbrook.edu",  _PW_HASH, "Biology",                "Sophomore", None, None,    None,     "private", "exact"),
-    ("friend-4",  "Tyler Johnson", "TJ", "#F97316", "tyler@westbrook.edu", _PW_HASH, "Psychology",             "Senior",    None, 40.7320, -73.7966, "sharing", "exact"),
-    ("friend-5",  "Emma Davis",    "ED", "#8B5CF6", "emma@westbrook.edu",  _PW_HASH, "Mathematics",            "Junior",    None, 40.7265, -73.7962, "sharing", "exact"),
-    ("friend-6",  "Chris Park",    "CP", "#6B7280", "chris@westbrook.edu", _PW_HASH, "Fine Arts",              "Freshman",  None, None,    None,     "private", "exact"),
-    ("friend-7",  "Lily Chen",     "LC", "#14B8A6", "lily@westbrook.edu",  _PW_HASH, "Pre-Med",                "Sophomore", None, 40.7285, -73.7972, "sharing", "binary"),
+    ("me",        "Alex Chen",     "AC", "#6366F1", "alex@unl.edu",  _PW_HASH, "Computer Science",       "Junior",    "CS student at University of Nebraska-Lincoln. Passionate about algorithms, coffee, and weekend soccer.", 40.8205, -96.7000, "sharing", "exact"),
+    ("friend-1",  "Sarah Kim",     "SK", "#EC4899", "sarah@unl.edu", _PW_HASH, "Computer Science",       "Junior",    None, 40.8200, -96.7010, "sharing", "exact"),
+    ("friend-2",  "Jake Williams", "JW", "#3B82F6", "jake@unl.edu",  _PW_HASH, "Mechanical Engineering", "Senior",    None, 40.8185, -96.6985, "sharing", "binary"),
+    ("friend-3",  "Maya Patel",    "MP", "#10B981", "maya@unl.edu",  _PW_HASH, "Biology",                "Sophomore", None, None,    None,     "private", "exact"),
+    ("friend-4",  "Tyler Johnson", "TJ", "#F97316", "tyler@unl.edu", _PW_HASH, "Psychology",             "Senior",    None, 40.8210, -96.6965, "sharing", "exact"),
+    ("friend-5",  "Emma Davis",    "ED", "#8B5CF6", "emma@unl.edu",  _PW_HASH, "Mathematics",            "Junior",    None, 40.8170, -96.7020, "sharing", "exact"),
+    ("friend-6",  "Chris Park",    "CP", "#6B7280", "chris@unl.edu", _PW_HASH, "Fine Arts",              "Freshman",  None, None,    None,     "private", "exact"),
+    ("friend-7",  "Lily Chen",     "LC", "#14B8A6", "lily@unl.edu",  _PW_HASH, "Pre-Med",                "Sophomore", None, 40.8220, -96.7015, "sharing", "binary"),
 ]
 
 SEED_FRIENDSHIPS = [
@@ -239,10 +239,10 @@ SEED_SCHEDULE_EXCEPTIONS = [
 SEED_NOTIFICATIONS = [
     # (id, user_id, type, message, timestamp, is_read)
     ("notif-1", "me", "entered_fence", "Sarah Kim entered Main Campus",        "2026-02-28 10:58:00", 0),
-    ("notif-2", "me", "entered_fence", "Jake Williams entered Athletic Center", "2026-02-28 10:55:00", 0),
+    ("notif-2", "me", "entered_fence", "Jake Williams entered Campus Recreation Center", "2026-02-28 10:55:00", 0),
     ("notif-3", "me", "group_invite",  "You've been invited to join Film Society", "2026-02-28 09:00:00", 1),
-    ("notif-4", "me", "left_fence",    "Tyler Johnson left the Library",        "2026-02-28 08:00:00", 1),
-    ("notif-5", "me", "entered_fence", "Emma Davis entered University Library", "2026-02-28 07:00:00", 1),
+    ("notif-4", "me", "left_fence",    "Tyler Johnson left Love Library",        "2026-02-28 08:00:00", 1),
+    ("notif-5", "me", "entered_fence", "Emma Davis entered Love Library", "2026-02-28 07:00:00", 1),
 ]
 
 
