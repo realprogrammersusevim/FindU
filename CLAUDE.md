@@ -26,16 +26,19 @@ pnpm build         # production build
 **Key files:**
 - `src/main.tsx` — entry point
 - `src/app/App.tsx` — root component, wraps router + context
-- `src/app/routes.tsx` — all routes
-- `src/app/store/AppContext.tsx` — all app state (React context, no Redux/Zustand)
-- `src/app/data/mockData.ts` — mock friends, groups, geofences, current user
+- `src/app/routes.tsx` — all routes, includes ProtectedRoute wrapper
+- `src/app/api.ts` — typed fetch wrapper; injects Bearer token from localStorage
+- `src/app/store/AppContext.tsx` — all app state (React context, no Redux/Zustand); includes login/register/logout + sync with backend
+- `src/app/data/mockData.ts` — fallback mock friends, groups, geofences, current user
 - `src/app/types/index.ts` — all shared TypeScript types
 - `src/app/components/layout/MobileLayout.tsx` — phone-frame shell + bottom nav
 - `src/app/components/map/CampusMap.tsx` — Leaflet map component
 - `src/app/components/ui/` — Radix UI wrappers (shadcn-style)
 - `src/styles/` — global CSS, Tailwind config, theme tokens
 
-**Routes:** `/map`, `/friends`, `/groups`, `/groups/:groupId`, `/privacy`, `/profile`
+**Routes:** `/login`, `/register`, `/map`, `/friends`, `/groups`, `/groups/:groupId`, `/privacy`, `/profile`
+
+All routes except `/login` and `/register` are protected — unauthenticated users are redirected to `/login`.
 
 **UI notes:**
 - Renders as a 430px-wide phone frame centered on a gradient background
@@ -43,9 +46,14 @@ pnpm build         # production build
 - Tailwind v4 uses CSS `@theme` variables, not `tailwind.config.js`
 - UI components use shadcn conventions with Radix primitives
 
+**Auth:**
+- JWT token stored in `localStorage` as `auth_token`
+- On app load, AppContext hydrates user profile from `GET /users/me` if token exists
+- Demo credentials: `alex@westbrook.edu` / `password`
+
 ## Backend
 
-**Stack:** Python, FastAPI, Pydantic v2, Uvicorn
+**Stack:** Python, FastAPI, Pydantic v2, Uvicorn, SQLite (aiosqlite), JWT (python-jose), bcrypt
 
 **Package manager:** uv (always use uv, never pip directly)
 
@@ -57,22 +65,62 @@ uv run uvicorn main:app --reload     # dev server at http://localhost:8000
 ```
 
 **Key files:**
-- `main.py` — FastAPI app, CORS config, router registration
+- `main.py` — FastAPI app, CORS config, router registration, lifespan (runs `init_db()`)
 - `requirements.txt` — pinned dependencies
-- `app/routers/` — one file per resource (users, friends, groups)
+- `app/auth.py` — JWT creation/verification, bcrypt hashing, HTTPBearer dependency
+- `app/db.py` — SQLite schema (13 tables), `init_db()`, seed data, `compute_within_fences()` (Haversine)
+- `app/models/` — Pydantic v2 request/response models (auth, user, friend, group, geofence, schedule, notification)
+- `app/routers/` — one file per resource
 
-**API:** `GET /health`, `GET /users/me`, `GET /friends/`, `GET /groups/`
+**API endpoints:**
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/health` | — | Health check |
+| POST | `/users/login` | — | Login, returns JWT |
+| POST | `/users/register` | — | Register, returns JWT |
+| GET | `/users/me` | ✓ | Current user profile |
+| PUT | `/users/me` | ✓ | Update profile |
+| PATCH | `/users/me/location` | ✓ | Update lat/lng |
+| PATCH | `/users/me/privacy-mode` | ✓ | Toggle privacy mode |
+| PATCH | `/users/me/location-mode` | ✓ | Toggle location mode |
+| GET | `/users/me/schedule` | ✓ | Schedule slots + exceptions |
+| POST | `/users/me/schedule/slots` | ✓ | Create schedule slot |
+| PUT | `/users/me/schedule/slots/{id}` | ✓ | Update schedule slot |
+| DELETE | `/users/me/schedule/slots/{id}` | ✓ | Delete schedule slot |
+| POST | `/users/me/schedule/exceptions` | ✓ | Create schedule exception |
+| DELETE | `/users/me/schedule/exceptions/{id}` | ✓ | Delete schedule exception |
+| GET | `/friends/` | ✓ | List friends |
+| POST | `/friends/requests` | ✓ | Send friend request |
+| GET | `/friends/requests` | ✓ | List pending requests |
+| POST | `/friends/requests/{id}/accept` | ✓ | Accept friend request |
+| DELETE | `/friends/{id}` | ✓ | Remove friend |
+| PATCH | `/friends/{id}/favorite` | ✓ | Toggle favorite |
+| GET | `/groups/` | ✓ | List all groups |
+| GET | `/groups/{id}` | ✓ | Group details |
+| POST | `/groups/` | ✓ | Create group |
+| POST | `/groups/{id}/join` | ✓ | Join group |
+| DELETE | `/groups/{id}/leave` | ✓ | Leave group |
+| PATCH | `/groups/{id}/alerts` | ✓ | Toggle group alerts |
+| PUT | `/groups/{id}/rules` | ✓ (admin) | Replace group rules |
+| GET | `/geofences/` | — | List geofences |
+| GET | `/notifications/` | ✓ | List notifications |
+| POST | `/notifications/read` | ✓ | Mark notifications read |
 
 **CORS:** configured to allow `http://localhost:5173` (Vite dev server)
 
 **Docs:** FastAPI auto-generates interactive docs at `http://localhost:8000/docs`
 
+**Database:** SQLite at `backend/findu.db` (created on startup). Seed data includes 8 demo users, 6 groups, 6 geofences, and sample friend relationships.
+
 ## Data model
 
 Core types defined in `frontend/src/app/types/index.ts` — mirror these in Pydantic models when adding backend endpoints:
 
-- `Friend` — id, name, shareStatus (`sharing` | `private` | `offline`), location (exact or binary)
-- `Group` — id, name, type (`greek` | `club` | `class` | `sports` | `custom`), members, geofenceIds, rules
+- `Friend` — id, name, shareStatus (`sharing` | `private` | `offline`), location (exact or binary), isFavorite, mutualFriends
+- `Group` — id, name, type (`greek` | `club` | `class` | `sports` | `custom`), members, geofenceIds, rules, isJoined, alertsEnabled
 - `Geofence` — id, name, center (lat/lng), radius (metres), color, icon
 - `CurrentUser` — profile, privacyMode, locationMode, scheduleSlots, exceptions
 - `LocationMode` — `exact` (pin on map) or `binary` (in-zone / not-in-zone only)
+- `ScheduleSlot` — days, startTime, endTime, mode, label, isDefault, isActive
+- `AppNotification` — id, type, message, read, createdAt
