@@ -1,5 +1,5 @@
 import 'leaflet/dist/leaflet.css';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import type { Geofence, Friend, CurrentUser } from '../../types';
@@ -7,17 +7,37 @@ import type { Geofence, Friend, CurrentUser } from '../../types';
 function MapController({
   centerOverride,
   zoomOverride,
+  currentUserPosition,
 }: {
   centerOverride?: { lat: number; lng: number };
   zoomOverride?: number;
+  currentUserPosition: { lat: number; lng: number };
 }) {
   const map = useMap();
+  const hasAutoCentered = useRef(false);
+
+  // Handle explicit overrides (e.g. clicking a friend)
   useEffect(() => {
     if (centerOverride) {
       map.flyTo([centerOverride.lat, centerOverride.lng], zoomOverride ?? 17, { duration: 0.8 });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, centerOverride?.lat, centerOverride?.lng, zoomOverride]);
+
+  // Handle initial auto-center on user's live position
+  useEffect(() => {
+    // If we have an override, we don't auto-center on the user.
+    if (centerOverride) return;
+
+    // We auto-center exactly once on the first non-default position we see.
+    // (Default is Lincoln, NE: 40.8207, -96.7005)
+    const isDefault = currentUserPosition.lat === 40.8207 && currentUserPosition.lng === -96.7005;
+
+    if (!hasAutoCentered.current && !isDefault) {
+      map.setView([currentUserPosition.lat, currentUserPosition.lng], zoomOverride ?? 17);
+      hasAutoCentered.current = true;
+    }
+  }, [map, currentUserPosition, centerOverride, zoomOverride]);
+
   return null;
 }
 
@@ -122,7 +142,11 @@ export function CampusMap({
       zoomControl={false}
       attributionControl={false}
     >
-      <MapController centerOverride={centerOverride} zoomOverride={zoomOverride} />
+      <MapController 
+        centerOverride={centerOverride} 
+        zoomOverride={zoomOverride} 
+        currentUserPosition={currentUser.position}
+      />
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         maxZoom={19}

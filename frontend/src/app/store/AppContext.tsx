@@ -14,8 +14,25 @@ import type {
   GroupType,
   UserSearchResult,
 } from '../types';
-import { initialCurrentUser } from '../data/mockData';
 import { apiFetch } from '../api';
+
+const DEFAULT_USER: CurrentUser = {
+  id: '',
+  name: '',
+  initials: '',
+  avatarColor: '#6366F1',
+  major: '',
+  year: '',
+  bio: '',
+  position: { lat: 40.8207, lng: -96.7005 }, // Default to UNL Campus
+  currentMode: 'sharing',
+  locationMode: 'exact',
+  activeGeofenceIds: [],
+  scheduleSlots: [],
+  exceptions: [],
+  friendCount: 0,
+  groupCount: 0,
+};
 
 export type LocationStatus = 'idle' | 'acquiring' | 'active' | 'denied' | 'unavailable' | 'insecure';
 
@@ -69,7 +86,7 @@ function _mapProfile(data: any): Partial<CurrentUser> {
     major: data.major ?? '',
     year: data.year ?? '',
     bio: data.bio ?? '',
-    position: data.position ?? initialCurrentUser.position,
+    position: data.position ?? DEFAULT_USER.position,
     currentMode: data.currentMode,
     locationMode: data.locationMode,
     activeGeofenceIds: data.activeGeofenceIds ?? [],
@@ -95,7 +112,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = !!authToken;
 
   const [profileLoaded, setProfileLoaded] = useState(false);
-  const [currentUser, setCurrentUser] = useState<CurrentUser>(initialCurrentUser);
+  const [currentUser, setCurrentUser] = useState<CurrentUser>(DEFAULT_USER);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -280,7 +297,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setFriendRequests([]);
     setGroups([]);
     setNotifications([]);
-    setCurrentUser(initialCurrentUser);
+    setCurrentUser(DEFAULT_USER);
   }, []);
 
   const togglePrivacyMode = useCallback(() => {
