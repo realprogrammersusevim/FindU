@@ -1,19 +1,18 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from app.auth import get_current_user_id
 from app.db import get_db
 from app.models.notification import Notification, MarkReadBody
 
 router = APIRouter()
 
-CURRENT_USER = "me"
-
 
 @router.get("/", response_model=list[Notification])
-async def list_notifications():
+async def list_notifications(current_user_id: str = Depends(get_current_user_id)):
     db = await get_db()
     try:
         async with db.execute(
             "SELECT * FROM notifications WHERE user_id = ? ORDER BY timestamp DESC",
-            (CURRENT_USER,),
+            (current_user_id,),
         ) as cur:
             rows = await cur.fetchall()
         return [
@@ -31,19 +30,19 @@ async def list_notifications():
 
 
 @router.post("/read")
-async def mark_read(body: MarkReadBody):
+async def mark_read(body: MarkReadBody, current_user_id: str = Depends(get_current_user_id)):
     db = await get_db()
     try:
         if body.ids is None:
             await db.execute(
                 "UPDATE notifications SET is_read = 1 WHERE user_id = ?",
-                (CURRENT_USER,),
+                (current_user_id,),
             )
         else:
             placeholders = ",".join("?" * len(body.ids))
             await db.execute(
                 f"UPDATE notifications SET is_read = 1 WHERE user_id = ? AND id IN ({placeholders})",
-                (CURRENT_USER, *body.ids),
+                (current_user_id, *body.ids),
             )
         await db.commit()
         return {"ok": True}

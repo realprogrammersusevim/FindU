@@ -1,5 +1,6 @@
 import math
 import aiosqlite
+import bcrypt as _bcrypt
 
 DB_PATH = "findu.db"
 
@@ -20,6 +21,8 @@ CREATE TABLE IF NOT EXISTS users (
     name            TEXT NOT NULL,
     initials        TEXT NOT NULL,
     avatar_color    TEXT NOT NULL,
+    email           TEXT UNIQUE NOT NULL,
+    password_hash   TEXT NOT NULL,
     major           TEXT,
     year            TEXT,
     bio             TEXT,
@@ -142,16 +145,18 @@ SEED_GEOFENCES = [
     ("fence-athletic",  "Athletic Center",      40.7297, -73.7926, 115,  "#F59E0B", "🏋️", "Athletic and recreation center"),
 ]
 
+_PW_HASH = _bcrypt.hashpw(b"password", _bcrypt.gensalt()).decode()
+
 SEED_USERS = [
-    # (id, name, initials, avatar_color, major, year, bio, lat, lng, current_mode, location_mode)
-    ("me",        "Alex Chen",     "AC", "#6366F1", "Computer Science",       "Junior",    "CS student at Westbrook University. Passionate about algorithms, coffee, and weekend soccer.", 40.7280, -73.7948, "sharing", "exact"),
-    ("friend-1",  "Sarah Kim",     "SK", "#EC4899", "Computer Science",       "Junior",    None, 40.7278, -73.7942, "sharing", "exact"),
-    ("friend-2",  "Jake Williams", "JW", "#3B82F6", "Mechanical Engineering", "Senior",    None, 40.7293, -73.7924, "sharing", "binary"),
-    ("friend-3",  "Maya Patel",    "MP", "#10B981", "Biology",                "Sophomore", None, None,    None,     "private", "exact"),
-    ("friend-4",  "Tyler Johnson", "TJ", "#F97316", "Psychology",             "Senior",    None, 40.7320, -73.7966, "sharing", "exact"),
-    ("friend-5",  "Emma Davis",    "ED", "#8B5CF6", "Mathematics",            "Junior",    None, 40.7265, -73.7962, "sharing", "exact"),
-    ("friend-6",  "Chris Park",    "CP", "#6B7280", "Fine Arts",              "Freshman",  None, None,    None,     "private", "exact"),
-    ("friend-7",  "Lily Chen",     "LC", "#14B8A6", "Pre-Med",                "Sophomore", None, 40.7285, -73.7972, "sharing", "binary"),
+    # (id, name, initials, avatar_color, email, password_hash, major, year, bio, lat, lng, current_mode, location_mode)
+    ("me",        "Alex Chen",     "AC", "#6366F1", "alex@westbrook.edu",  _PW_HASH, "Computer Science",       "Junior",    "CS student at Westbrook University. Passionate about algorithms, coffee, and weekend soccer.", 40.7280, -73.7948, "sharing", "exact"),
+    ("friend-1",  "Sarah Kim",     "SK", "#EC4899", "sarah@westbrook.edu", _PW_HASH, "Computer Science",       "Junior",    None, 40.7278, -73.7942, "sharing", "exact"),
+    ("friend-2",  "Jake Williams", "JW", "#3B82F6", "jake@westbrook.edu",  _PW_HASH, "Mechanical Engineering", "Senior",    None, 40.7293, -73.7924, "sharing", "binary"),
+    ("friend-3",  "Maya Patel",    "MP", "#10B981", "maya@westbrook.edu",  _PW_HASH, "Biology",                "Sophomore", None, None,    None,     "private", "exact"),
+    ("friend-4",  "Tyler Johnson", "TJ", "#F97316", "tyler@westbrook.edu", _PW_HASH, "Psychology",             "Senior",    None, 40.7320, -73.7966, "sharing", "exact"),
+    ("friend-5",  "Emma Davis",    "ED", "#8B5CF6", "emma@westbrook.edu",  _PW_HASH, "Mathematics",            "Junior",    None, 40.7265, -73.7962, "sharing", "exact"),
+    ("friend-6",  "Chris Park",    "CP", "#6B7280", "chris@westbrook.edu", _PW_HASH, "Fine Arts",              "Freshman",  None, None,    None,     "private", "exact"),
+    ("friend-7",  "Lily Chen",     "LC", "#14B8A6", "lily@westbrook.edu",  _PW_HASH, "Pre-Med",                "Sophomore", None, 40.7285, -73.7972, "sharing", "binary"),
 ]
 
 SEED_FRIENDSHIPS = [
@@ -258,7 +263,7 @@ async def init_db() -> None:
             SEED_GEOFENCES,
         )
         await db.executemany(
-            "INSERT INTO users VALUES (?,?,?,?,?,?,?,?,?,?,?,datetime('now'))",
+            "INSERT INTO users VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))",
             SEED_USERS,
         )
         await db.executemany(

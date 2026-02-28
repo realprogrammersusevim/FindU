@@ -21,7 +21,7 @@ import { useApp } from '../store/AppContext';
 import { AnimatePresence, motion } from 'motion/react';
 
 export function ProfilePage() {
-  const { currentUser, friends, groups, notifications, unreadCount, togglePrivacyMode, markNotificationsRead } = useApp();
+  const { currentUser, friends, groups, notifications, unreadCount, togglePrivacyMode, markNotificationsRead, logout } = useApp();
   const [showNotifPanel, setShowNotifPanel] = useState(false);
 
   const myGroups = groups.filter((g) => g.isJoined);
@@ -108,6 +108,7 @@ export function ProfilePage() {
           label: 'Sign Out',
           value: '',
           danger: true,
+          action: logout,
         },
       ],
     },

@@ -1,6 +1,7 @@
 import json
 import uuid
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from app.auth import get_current_user_id
 from app.db import get_db, compute_within_fences
 from app.models.group import (
     Group,
@@ -13,15 +14,13 @@ from app.models.group import (
 
 router = APIRouter()
 
-CURRENT_USER = "me"
-
 
 async def _fetch_geofences(db):
     async with db.execute("SELECT id, center_lat, center_lng, radius FROM geofences") as cur:
         return [dict(r) for r in await cur.fetchall()]
 
 
-async def _build_group(db, group_row, fences: list) -> Group:
+async def _build_group(db, group_row, fences: list, current_user_id: str) -> Group:
     gid = group_row["id"]
 
     # Members
@@ -64,7 +63,7 @@ async def _build_group(db, group_row, fences: list) -> Group:
             withinGeofence=in_fence,
         ))
 
-        if mr["id"] == CURRENT_USER:
+        if mr["id"] == current_user_id:
             is_joined = True
             my_role = mr["role"]
             alerts_enabled = bool(mr["alerts_enabled"])
@@ -115,19 +114,19 @@ async def _build_group(db, group_row, fences: list) -> Group:
 
 
 @router.get("/", response_model=list[Group])
-async def list_groups():
+async def list_groups(current_user_id: str = Depends(get_current_user_id)):
     db = await get_db()
     try:
         fences = await _fetch_geofences(db)
         async with db.execute("SELECT * FROM groups ORDER BY name") as cur:
             group_rows = await cur.fetchall()
-        return [await _build_group(db, row, fences) for row in group_rows]
+        return [await _build_group(db, row, fences, current_user_id) for row in group_rows]
     finally:
         await db.close()
 
 
 @router.get("/{group_id}", response_model=Group)
-async def get_group(group_id: str):
+async def get_group(group_id: str, current_user_id: str = Depends(get_current_user_id)):
     db = await get_db()
     try:
         async with db.execute("SELECT * FROM groups WHERE id = ?", (group_id,)) as cur:
@@ -135,13 +134,13 @@ async def get_group(group_id: str):
         if not row:
             raise HTTPException(status_code=404, detail="Group not found")
         fences = await _fetch_geofences(db)
-        return await _build_group(db, row, fences)
+        return await _build_group(db, row, fences, current_user_id)
     finally:
         await db.close()
 
 
 @router.post("/", response_model=Group)
-async def create_group(body: CreateGroupBody):
+async def create_group(body: CreateGroupBody, current_user_id: str = Depends(get_current_user_id)):
     group_id = f"group-{uuid.uuid4().hex[:8]}"
     db = await get_db()
     try:
@@ -153,19 +152,19 @@ async def create_group(body: CreateGroupBody):
         member_id = f"gm-{uuid.uuid4().hex[:8]}"
         await db.execute(
             "INSERT INTO group_members VALUES (?,?,?,'admin',1,datetime('now'))",
-            (member_id, group_id, CURRENT_USER),
+            (member_id, group_id, current_user_id),
         )
         await db.commit()
         async with db.execute("SELECT * FROM groups WHERE id = ?", (group_id,)) as cur:
             row = await cur.fetchone()
         fences = await _fetch_geofences(db)
-        return await _build_group(db, row, fences)
+        return await _build_group(db, row, fences, current_user_id)
     finally:
         await db.close()
 
 
 @router.post("/{group_id}/join")
-async def join_group(group_id: str):
+async def join_group(group_id: str, current_user_id: str = Depends(get_current_user_id)):
     db = await get_db()
     try:
         async with db.execute("SELECT id FROM groups WHERE id = ?", (group_id,)) as cur:
@@ -175,7 +174,7 @@ async def join_group(group_id: str):
         try:
             await db.execute(
                 "INSERT INTO group_members VALUES (?,?,?,'member',1,datetime('now'))",
-                (member_id, group_id, CURRENT_USER),
+                (member_id, group_id, current_user_id),
             )
             await db.commit()
         except Exception:
@@ -186,12 +185,12 @@ async def join_group(group_id: str):
 
 
 @router.delete("/{group_id}/leave")
-async def leave_group(group_id: str):
+async def leave_group(group_id: str, current_user_id: str = Depends(get_current_user_id)):
     db = await get_db()
     try:
         await db.execute(
             "DELETE FROM group_members WHERE group_id = ? AND user_id = ?",
-            (group_id, CURRENT_USER),
+            (group_id, current_user_id),
         )
         await db.commit()
         return {"ok": True}
@@ -200,12 +199,12 @@ async def leave_group(group_id: str):
 
 
 @router.patch("/{group_id}/alerts")
-async def toggle_alerts(group_id: str, body: ToggleAlertsBody):
+async def toggle_alerts(group_id: str, body: ToggleAlertsBody, current_user_id: str = Depends(get_current_user_id)):
     db = await get_db()
     try:
         await db.execute(
             "UPDATE group_members SET alerts_enabled = ? WHERE group_id = ? AND user_id = ?",
-            (int(body.enabled), group_id, CURRENT_USER),
+            (int(body.enabled), group_id, current_user_id),
         )
         await db.commit()
         return {"ok": True, "alertsEnabled": body.enabled}
@@ -214,13 +213,13 @@ async def toggle_alerts(group_id: str, body: ToggleAlertsBody):
 
 
 @router.put("/{group_id}/rules", response_model=list[GroupRule])
-async def replace_rules(group_id: str, body: ReplaceRulesBody):
+async def replace_rules(group_id: str, body: ReplaceRulesBody, current_user_id: str = Depends(get_current_user_id)):
     db = await get_db()
     try:
         # Check caller is admin
         async with db.execute(
             "SELECT role FROM group_members WHERE group_id = ? AND user_id = ?",
-            (group_id, CURRENT_USER),
+            (group_id, current_user_id),
         ) as cur:
             row = await cur.fetchone()
         if not row or row["role"] != "admin":
