@@ -160,7 +160,7 @@ SEED_GEOFENCES = [
     (
         "fence-knoll-eastside",
         "Knoll & Eastside Suites",
-        40.8198,
+        40.8190,
         -96.6965,
         140,
         "#8B5CF6",
@@ -230,22 +230,12 @@ SEED_GEOFENCES = [
     (
         "fence-hss",
         "Harper-Schramm-Smith",
-        40.8231,
+        40.8240,
         -96.7015,
         150,
         "#8B5CF6",
         "🏠",
         "HSS residential complex and dining center",
-    ),
-    (
-        "fence-avery",
-        "Avery Hall",
-        40.8191,
-        -96.7024,
-        80,
-        "#3B82F6",
-        "💻",
-        "School of Computing and Mathematics",
     ),
 ]
 
