@@ -362,6 +362,11 @@ async def create_slot(
             int(body.isActive),
         ),
     )
+    # Reset mode_updated_at so the new schedule takes effect immediately
+    await db.execute(
+        "UPDATE users SET mode_updated_at = '1970-01-01 00:00:00' WHERE id = ?",
+        (current_user_id,)
+    )
     await db.commit()
     return ScheduleSlot(
         id=slot_id,
@@ -412,6 +417,12 @@ async def update_slot(
             f"UPDATE schedule_slots SET {sets} WHERE id = ?",
             (*processed.values(), slot_id),
         )
+        
+        # Reset mode_updated_at so the updated schedule takes effect immediately
+        await db.execute(
+            "UPDATE users SET mode_updated_at = '1970-01-01 00:00:00' WHERE id = ?",
+            (current_user_id,)
+        )
         await db.commit()
 
     async with db.execute(
@@ -440,6 +451,11 @@ async def delete_slot(
         "DELETE FROM schedule_slots WHERE id = ? AND user_id = ?",
         (slot_id, current_user_id),
     )
+    # Reset mode_updated_at
+    await db.execute(
+        "UPDATE users SET mode_updated_at = '1970-01-01 00:00:00' WHERE id = ?",
+        (current_user_id,)
+    )
     await db.commit()
     return {"ok": True}
 
@@ -463,6 +479,11 @@ async def create_exception(
             body.note,
         ),
     )
+    # Reset mode_updated_at
+    await db.execute(
+        "UPDATE users SET mode_updated_at = '1970-01-01 00:00:00' WHERE id = ?",
+        (current_user_id,)
+    )
     await db.commit()
     return ScheduleException(
         id=exc_id,
@@ -483,6 +504,11 @@ async def delete_exception(
     await db.execute(
         "DELETE FROM schedule_exceptions WHERE id = ? AND user_id = ?",
         (exc_id, current_user_id),
+    )
+    # Reset mode_updated_at
+    await db.execute(
+        "UPDATE users SET mode_updated_at = '1970-01-01 00:00:00' WHERE id = ?",
+        (current_user_id,)
     )
     await db.commit()
     return {"ok": True}

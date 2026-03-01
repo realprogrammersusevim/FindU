@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 
 
@@ -15,8 +15,10 @@ async def compute_effective_mode(db, user_row) -> str:
         mode_updated_at_str = "1970-01-01 00:00:00"
 
     try:
-        # SQLite datetime('now') returns 'YYYY-MM-DD HH:MM:SS'
-        mode_updated_at = datetime.strptime(mode_updated_at_str, "%Y-%m-%d %H:%M:%S")
+        # SQLite datetime('now') returns 'YYYY-MM-DD HH:MM:SS' in UTC
+        mode_updated_at_utc = datetime.strptime(mode_updated_at_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        # Convert to local time for comparison with local schedule slots
+        mode_updated_at = mode_updated_at_utc.astimezone().replace(tzinfo=None)
     except ValueError:
         mode_updated_at = datetime.min
 
