@@ -429,6 +429,7 @@ async def update_slot(
         "SELECT * FROM schedule_slots WHERE id = ?", (slot_id,)
     ) as cur:
         updated = await cur.fetchone()
+    assert updated is not None
     return ScheduleSlot(
         id=updated["id"],
         days=json.loads(updated["days"]),

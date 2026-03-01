@@ -623,6 +623,7 @@ async def init_db() -> None:
         # Only seed if empty
         async with db.execute("SELECT COUNT(*) FROM users") as cur:
             row = await cur.fetchone()
+            assert row is not None
             if row[0] > 0:
                 return
 

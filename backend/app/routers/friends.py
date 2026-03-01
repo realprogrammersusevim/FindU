@@ -1,4 +1,5 @@
 import uuid
+from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
 from app.auth import get_current_user_id
 import aiosqlite
@@ -23,7 +24,7 @@ async def _fetch_geofences(db):
         return [dict(r) for r in await cur.fetchall()]
 
 
-async def _share_status(db, user_row) -> str:
+async def _share_status(db, user_row) -> Literal["sharing", "private", "offline"]:
     effective_mode = await compute_effective_mode(db, user_row)
     if effective_mode == "private":
         return "private"
