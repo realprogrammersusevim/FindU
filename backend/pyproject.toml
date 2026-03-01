@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ty]
+python-version = "3.12"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.4",
+    "ty>=0.0.19",
+]
