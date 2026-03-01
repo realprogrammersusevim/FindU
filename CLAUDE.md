@@ -33,11 +33,9 @@ pnpm build         # production build
 - `src/app/api.ts` — typed fetch wrapper; injects Bearer token from localStorage
 - `src/app/store/AppContext.tsx` — all app state (React context, no
   Redux/Zustand); includes login/register/logout + sync with backend
-- `src/app/data/mockData.ts` — fallback mock friends, groups, geofences, current
-  user
 - `src/app/types/index.ts` — all shared TypeScript types
 - `src/app/components/layout/MobileLayout.tsx` — phone-frame shell + bottom nav
-- `src/app/components/map/CampusMap.tsx` — Leaflet map component
+- `src/app/components/map/` — Map-related components (CampusMap, LocationStatusBanner, MapBottomSheet, MapTopBar, NotificationsPanel)
 - `src/app/components/ui/` — Radix UI wrappers (shadcn-style)
 - `src/styles/` — global CSS, Tailwind config, theme tokens
 
@@ -77,16 +75,13 @@ uv run uvicorn main:app --reload     # dev server at http://localhost:8000
 
 **Key files:**
 
-- `main.py` — FastAPI app, CORS config, router registration, lifespan (runs
-  `init_db()`)
-- `requirements.txt` — pinned dependencies
-- `app/auth.py` — JWT creation/verification, bcrypt hashing, HTTPBearer
-  dependency
-- `app/db.py` — SQLite schema (13 tables), `init_db()`, seed data,
-  `compute_within_fences()` (Haversine)
-- `app/models/` — Pydantic v2 request/response models (auth, user, friend,
-  group, geofence, schedule, notification)
-- `app/routers/` — one file per resource
+- `backend/main.py` — FastAPI app, CORS config, router registration, lifespan (runs `init_db()`)
+- `backend/requirements.txt` — pinned dependencies
+- `backend/app/auth.py` — JWT creation/verification, bcrypt hashing, HTTPBearer dependency
+- `backend/app/db.py` — SQLite schema (10 tables), `init_db()`, seed data, `compute_within_fences()` (Haversine)
+- `backend/app/schedule_eval.py` — logic for calculating active privacy mode based on schedules
+- `backend/app/models/` — Pydantic v2 request/response models (auth, user, friend, group, geofence, schedule, notification)
+- `backend/app/routers/` — one file per resource
 
 **API endpoints:**
 
