@@ -1,39 +1,54 @@
-import { useState } from 'react';
-import { Search, Plus, Clock, MapPin, Bell, BellOff, ChevronRight, Loader2 } from 'lucide-react';
-import { Link } from 'react-router';
-import { AnimatePresence, motion } from 'motion/react';
-import { useApp } from '../store/AppContext';
-import type { Group, GroupType } from '../types';
+import { useState } from "react";
+import {
+  Search,
+  Plus,
+  Clock,
+  MapPin,
+  Bell,
+  BellOff,
+  ChevronRight,
+  Loader2,
+} from "lucide-react";
+import { Link } from "react-router";
+import { AnimatePresence, motion } from "motion/react";
+import { useApp } from "../store/AppContext";
+import type { Group, GroupType } from "../types";
 
 const typeConfig: Record<string, { label: string; emoji: string }> = {
-  greek: { label: 'Greek Life', emoji: '🏛️' },
-  club: { label: 'Club', emoji: '🎯' },
-  class: { label: 'Class', emoji: '📚' },
-  sports: { label: 'Sports', emoji: '🏆' },
-  custom: { label: 'Custom', emoji: '⭐' },
+  greek: { label: "Greek Life", emoji: "🏛️" },
+  club: { label: "Club", emoji: "🎯" },
+  class: { label: "Class", emoji: "📚" },
+  sports: { label: "Sports", emoji: "🏆" },
+  custom: { label: "Custom", emoji: "⭐" },
 };
 
 const PRESET_COLORS = [
-  '#6366F1', '#EC4899', '#3B82F6', '#10B981',
-  '#F97316', '#8B5CF6', '#14B8A6', '#F59E0B',
+  "#6366F1",
+  "#EC4899",
+  "#3B82F6",
+  "#10B981",
+  "#F97316",
+  "#8B5CF6",
+  "#14B8A6",
+  "#F59E0B",
 ];
 
 function CreateGroupModal({ onClose }: { onClose: () => void }) {
   const { createGroup } = useApp();
-  const [name, setName] = useState('');
-  const [type, setType] = useState<GroupType>('custom');
-  const [emoji, setEmoji] = useState('⭐');
-  const [description, setDescription] = useState('');
-  const [color, setColor] = useState('#6366F1');
+  const [name, setName] = useState("");
+  const [type, setType] = useState<GroupType>("custom");
+  const [emoji, setEmoji] = useState("⭐");
+  const [description, setDescription] = useState("");
+  const [color, setColor] = useState("#6366F1");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const EMOJI_OPTIONS: Record<GroupType, string> = {
-    greek: '🏛️',
-    club: '🎯',
-    class: '📚',
-    sports: '🏆',
-    custom: '⭐',
+    greek: "🏛️",
+    club: "🎯",
+    class: "📚",
+    sports: "🏆",
+    custom: "⭐",
   };
 
   const handleTypeChange = (t: GroupType) => {
@@ -42,14 +57,23 @@ function CreateGroupModal({ onClose }: { onClose: () => void }) {
   };
 
   const handleSubmit = async () => {
-    if (!name.trim()) { setError('Name is required'); return; }
-    setError('');
+    if (!name.trim()) {
+      setError("Name is required");
+      return;
+    }
+    setError("");
     setLoading(true);
     try {
-      await createGroup({ name: name.trim(), type, emoji, description: description.trim() || undefined, color });
+      await createGroup({
+        name: name.trim(),
+        type,
+        emoji,
+        description: description.trim() || undefined,
+        color,
+      });
       onClose();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to create group');
+      setError(e instanceof Error ? e.message : "Failed to create group");
     } finally {
       setLoading(false);
     }
@@ -64,19 +88,27 @@ function CreateGroupModal({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <motion.div
-        initial={{ y: '100%' }}
+        initial={{ y: "100%" }}
         animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 25 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 25 }}
         className="bg-white rounded-t-3xl w-full max-w-[430px] overflow-hidden"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="font-bold text-gray-900">Create Group</h3>
-          <button onClick={onClose} className="text-gray-400 text-xl leading-none">×</button>
+          <button
+            onClick={onClose}
+            className="text-gray-400 text-xl leading-none"
+          >
+            ×
+          </button>
         </div>
 
-        <div className="px-5 py-4 space-y-4 overflow-y-auto" style={{ maxHeight: '75vh' }}>
+        <div
+          className="px-5 py-4 space-y-4 overflow-y-auto"
+          style={{ maxHeight: "75vh" }}
+        >
           {/* Emoji + Name row */}
           <div className="flex gap-3 items-start">
             <div
@@ -86,10 +118,12 @@ function CreateGroupModal({ onClose }: { onClose: () => void }) {
               {emoji}
             </div>
             <div className="flex-1">
-              <label className="text-xs font-semibold text-gray-500 mb-1 block">Group Name</label>
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">
+                Group Name
+              </label>
               <input
                 value={name}
-                onChange={e => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Study Squad"
                 className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 outline-none"
                 autoFocus
@@ -99,18 +133,22 @@ function CreateGroupModal({ onClose }: { onClose: () => void }) {
 
           {/* Type */}
           <div>
-            <label className="text-xs font-semibold text-gray-500 mb-2 block">Type</label>
+            <label className="text-xs font-semibold text-gray-500 mb-2 block">
+              Type
+            </label>
             <div className="grid grid-cols-5 gap-1.5">
-              {(Object.keys(typeConfig) as GroupType[]).map(t => (
+              {(Object.keys(typeConfig) as GroupType[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => handleTypeChange(t)}
                   className={`flex flex-col items-center gap-1 py-2 rounded-xl text-[10px] font-semibold transition-all ${
-                    type === t ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'
+                    type === t
+                      ? "bg-indigo-100 text-indigo-700"
+                      : "bg-gray-100 text-gray-500"
                   }`}
                 >
                   <span className="text-lg">{typeConfig[t].emoji}</span>
-                  {typeConfig[t].label.split(' ')[0]}
+                  {typeConfig[t].label.split(" ")[0]}
                 </button>
               ))}
             </div>
@@ -118,13 +156,15 @@ function CreateGroupModal({ onClose }: { onClose: () => void }) {
 
           {/* Color */}
           <div>
-            <label className="text-xs font-semibold text-gray-500 mb-2 block">Color</label>
+            <label className="text-xs font-semibold text-gray-500 mb-2 block">
+              Color
+            </label>
             <div className="flex gap-2 flex-wrap">
-              {PRESET_COLORS.map(c => (
+              {PRESET_COLORS.map((c) => (
                 <button
                   key={c}
                   onClick={() => setColor(c)}
-                  className={`w-8 h-8 rounded-full transition-all ${color === c ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''}`}
+                  className={`w-8 h-8 rounded-full transition-all ${color === c ? "ring-2 ring-offset-2 ring-gray-400 scale-110" : ""}`}
                   style={{ backgroundColor: c }}
                 />
               ))}
@@ -133,10 +173,12 @@ function CreateGroupModal({ onClose }: { onClose: () => void }) {
 
           {/* Description */}
           <div>
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Description (optional)</label>
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">
+              Description (optional)
+            </label>
             <textarea
               value={description}
-              onChange={e => setDescription(e.target.value)}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="What's this group about?"
               rows={2}
               className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 outline-none resize-none"
@@ -154,7 +196,9 @@ function CreateGroupModal({ onClose }: { onClose: () => void }) {
               {emoji}
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-900">{name || 'Group Name'}</p>
+              <p className="text-sm font-bold text-gray-900">
+                {name || "Group Name"}
+              </p>
               <span
                 className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
                 style={{ backgroundColor: `${color}20`, color }}
@@ -169,8 +213,12 @@ function CreateGroupModal({ onClose }: { onClose: () => void }) {
             disabled={loading || !name.trim()}
             className="w-full py-3 bg-indigo-600 text-white text-sm font-semibold rounded-2xl disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            {loading ? 'Creating…' : 'Create Group'}
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Plus className="w-4 h-4" />
+            )}
+            {loading ? "Creating…" : "Create Group"}
           </button>
         </div>
         <div className="h-4" />
@@ -179,13 +227,17 @@ function CreateGroupModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function GroupCard({ group, onToggleJoin, onToggleAlerts }: {
+function GroupCard({
+  group,
+  onToggleJoin,
+  onToggleAlerts,
+}: {
   group: Group;
   onToggleJoin: () => void;
   onToggleAlerts: () => void;
 }) {
-  const isAdmin = group.myRole === 'admin';
-  const isMod = group.myRole === 'moderator';
+  const isAdmin = group.myRole === "admin";
+  const isMod = group.myRole === "moderator";
 
   const activeRule = group.rules[0];
 
@@ -208,7 +260,9 @@ function GroupCard({ group, onToggleJoin, onToggleAlerts }: {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-sm font-bold text-gray-900">{group.name}</span>
+              <span className="text-sm font-bold text-gray-900">
+                {group.name}
+              </span>
               {isAdmin && (
                 <span className="text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
                   Admin
@@ -223,7 +277,10 @@ function GroupCard({ group, onToggleJoin, onToggleAlerts }: {
             <div className="flex items-center gap-2 mt-0.5">
               <span
                 className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
-                style={{ backgroundColor: `${group.color}20`, color: group.color }}
+                style={{
+                  backgroundColor: `${group.color}20`,
+                  color: group.color,
+                }}
               >
                 {typeConfig[group.type]?.label}
               </span>
@@ -235,7 +292,9 @@ function GroupCard({ group, onToggleJoin, onToggleAlerts }: {
           <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0 mt-1" />
         </div>
 
-        <p className="text-xs text-gray-500 mb-3 line-clamp-2">{group.description}</p>
+        <p className="text-xs text-gray-500 mb-3 line-clamp-2">
+          {group.description}
+        </p>
 
         {/* Stats row */}
         <div className="flex items-center gap-3 mb-3">
@@ -272,8 +331,11 @@ function GroupCard({ group, onToggleJoin, onToggleAlerts }: {
         <div className="flex items-center gap-1 mb-3 flex-wrap">
           <MapPin className="w-3 h-3 text-gray-400" />
           {group.geofenceIds.map((fid) => (
-            <span key={fid} className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-              {fid.replace('fence-', '').replace(/-/g, ' ')}
+            <span
+              key={fid}
+              className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
+            >
+              {fid.replace("fence-", "").replace(/-/g, " ")}
             </span>
           ))}
         </div>
@@ -286,8 +348,8 @@ function GroupCard({ group, onToggleJoin, onToggleAlerts }: {
                 onClick={onToggleAlerts}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
                   group.alertsEnabled
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'bg-gray-100 text-gray-500'
+                    ? "bg-indigo-100 text-indigo-700"
+                    : "bg-gray-100 text-gray-500"
                 }`}
               >
                 {group.alertsEnabled ? (
@@ -295,7 +357,7 @@ function GroupCard({ group, onToggleJoin, onToggleAlerts }: {
                 ) : (
                   <BellOff className="w-3 h-3" />
                 )}
-                {group.alertsEnabled ? 'Alerts on' : 'Alerts off'}
+                {group.alertsEnabled ? "Alerts on" : "Alerts off"}
               </button>
               <button
                 onClick={onToggleJoin}
@@ -321,9 +383,9 @@ function GroupCard({ group, onToggleJoin, onToggleAlerts }: {
 
 export function GroupsPage() {
   const { groups, toggleGroupJoin, toggleGroupAlerts } = useApp();
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [tab, setTab] = useState<'mine' | 'discover'>('mine');
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [tab, setTab] = useState<"mine" | "discover">("mine");
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const myGroups = groups.filter((g) => g.isJoined);
@@ -332,11 +394,12 @@ export function GroupsPage() {
   const filterGroups = (list: Group[]) =>
     list.filter((g) => {
       const matchSearch = g.name.toLowerCase().includes(search.toLowerCase());
-      const matchType = typeFilter === 'all' || g.type === typeFilter;
+      const matchType = typeFilter === "all" || g.type === typeFilter;
       return matchSearch && matchType;
     });
 
-  const displayed = tab === 'mine' ? filterGroups(myGroups) : filterGroups(discoverGroups);
+  const displayed =
+    tab === "mine" ? filterGroups(myGroups) : filterGroups(discoverGroups);
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
@@ -370,17 +433,21 @@ export function GroupsPage() {
         {/* Tab selector */}
         <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-3">
           <button
-            onClick={() => setTab('mine')}
+            onClick={() => setTab("mine")}
             className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              tab === 'mine' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+              tab === "mine"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500"
             }`}
           >
             My Groups ({myGroups.length})
           </button>
           <button
-            onClick={() => setTab('discover')}
+            onClick={() => setTab("discover")}
             className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              tab === 'discover' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+              tab === "discover"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500"
             }`}
           >
             Discover ({discoverGroups.length})
@@ -388,16 +455,21 @@ export function GroupsPage() {
         </div>
 
         {/* Type filters */}
-        <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {['all', 'greek', 'club', 'class', 'sports'].map((t) => (
+        <div
+          className="flex gap-2 overflow-x-auto"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {["all", "greek", "club", "class", "sports"].map((t) => (
             <button
               key={t}
               onClick={() => setTypeFilter(t)}
               className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                typeFilter === t ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600'
+                typeFilter === t
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-100 text-gray-600"
               }`}
             >
-              {t === 'all' ? 'All' : typeConfig[t]?.label}
+              {t === "all" ? "All" : typeConfig[t]?.label}
             </button>
           ))}
         </div>
@@ -407,12 +479,14 @@ export function GroupsPage() {
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
         {displayed.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="text-4xl mb-3">{tab === 'mine' ? '👥' : '🔍'}</div>
+            <div className="text-4xl mb-3">{tab === "mine" ? "👥" : "🔍"}</div>
             <p className="text-sm font-semibold text-gray-600">
-              {tab === 'mine' ? 'No groups joined yet' : 'No groups found'}
+              {tab === "mine" ? "No groups joined yet" : "No groups found"}
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              {tab === 'mine' ? 'Discover and join groups below' : 'Try different filters'}
+              {tab === "mine"
+                ? "Discover and join groups below"
+                : "Try different filters"}
             </p>
           </div>
         ) : (
@@ -426,9 +500,11 @@ export function GroupsPage() {
           ))
         )}
 
-        {tab === 'discover' && discoverGroups.length > 0 && (
+        {tab === "discover" && discoverGroups.length > 0 && (
           <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-4 border border-indigo-100 text-center">
-            <p className="text-xs font-semibold text-indigo-800 mb-1">Can't find your group?</p>
+            <p className="text-xs font-semibold text-indigo-800 mb-1">
+              Can't find your group?
+            </p>
             <p className="text-xs text-indigo-600 mb-3">
               Ask your group admin for an invite code to join a private group.
             </p>
@@ -441,7 +517,9 @@ export function GroupsPage() {
 
       {/* Create Group Modal */}
       <AnimatePresence>
-        {showCreateModal && <CreateGroupModal onClose={() => setShowCreateModal(false)} />}
+        {showCreateModal && (
+          <CreateGroupModal onClose={() => setShowCreateModal(false)} />
+        )}
       </AnimatePresence>
     </div>
   );

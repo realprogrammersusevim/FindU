@@ -16,7 +16,9 @@ async def compute_effective_mode(db, user_row) -> str:
 
     try:
         # SQLite datetime('now') returns 'YYYY-MM-DD HH:MM:SS' in UTC
-        mode_updated_at_utc = datetime.strptime(mode_updated_at_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        mode_updated_at_utc = datetime.strptime(
+            mode_updated_at_str, "%Y-%m-%d %H:%M:%S"
+        ).replace(tzinfo=timezone.utc)
         # Convert to local time for comparison with local schedule slots
         mode_updated_at = mode_updated_at_utc.astimezone().replace(tzinfo=None)
     except ValueError:

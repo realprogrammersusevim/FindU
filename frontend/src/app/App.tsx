@@ -1,7 +1,7 @@
-import 'leaflet/dist/leaflet.css';
-import { RouterProvider } from 'react-router';
-import { router } from './routes';
-import { AppProvider } from './store/AppContext';
+import "leaflet/dist/leaflet.css";
+import { RouterProvider } from "react-router";
+import { router } from "./routes";
+import { AppProvider } from "./store/AppContext";
 
 export default function App() {
   return (

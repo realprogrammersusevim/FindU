@@ -1,8 +1,15 @@
-import 'leaflet/dist/leaflet.css';
-import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import type { Geofence, Friend, CurrentUser } from '../../types';
+import "leaflet/dist/leaflet.css";
+import { useEffect, useRef } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Circle,
+  Marker,
+  Popup,
+  useMap,
+} from "react-leaflet";
+import L from "leaflet";
+import type { Geofence, Friend, CurrentUser } from "../../types";
 
 function MapController({
   centerOverride,
@@ -19,7 +26,9 @@ function MapController({
   // Handle explicit overrides (e.g. clicking a friend)
   useEffect(() => {
     if (centerOverride) {
-      map.flyTo([centerOverride.lat, centerOverride.lng], zoomOverride ?? 17, { duration: 0.8 });
+      map.flyTo([centerOverride.lat, centerOverride.lng], zoomOverride ?? 17, {
+        duration: 0.8,
+      });
     }
   }, [map, centerOverride?.lat, centerOverride?.lng, zoomOverride]);
 
@@ -30,10 +39,15 @@ function MapController({
 
     // We auto-center exactly once on the first non-default position we see.
     // (Default is Lincoln, NE: 40.8207, -96.7005)
-    const isDefault = currentUserPosition.lat === 40.8207 && currentUserPosition.lng === -96.7005;
+    const isDefault =
+      currentUserPosition.lat === 40.8207 &&
+      currentUserPosition.lng === -96.7005;
 
     if (!hasAutoCentered.current && !isDefault) {
-      map.setView([currentUserPosition.lat, currentUserPosition.lng], zoomOverride ?? 17);
+      map.setView(
+        [currentUserPosition.lat, currentUserPosition.lng],
+        zoomOverride ?? 17
+      );
       hasAutoCentered.current = true;
     }
   }, [map, currentUserPosition, centerOverride, zoomOverride]);
@@ -60,13 +74,12 @@ function createAvatarIcon(initials: string, color: string) {
         background:#10B981;border:2px solid white;
       "></div>
     </div>`,
-    className: '',
+    className: "",
     iconSize: [38, 38],
     iconAnchor: [19, 19],
     popupAnchor: [0, -22],
   });
 }
-
 
 function createCurrentUserIcon(initials: string, color: string) {
   return L.divIcon({
@@ -95,7 +108,7 @@ function createCurrentUserIcon(initials: string, color: string) {
         "></div>
       </div>
     </div>`,
-    className: '',
+    className: "",
     iconSize: [48, 48],
     iconAnchor: [24, 24],
     popupAnchor: [0, -26],
@@ -121,7 +134,7 @@ export function CampusMap({
   activeGeofenceIds,
   centerOverride,
   zoomOverride,
-  height = '100%',
+  height = "100%",
 }: CampusMapProps) {
   const initialCenter = currentUser.position;
   const initialZoom = 15;
@@ -131,20 +144,20 @@ export function CampusMap({
     : geofences;
 
   const visibleFriends = friends.filter(
-    (f) => f.shareStatus === 'sharing' && f.location !== null
+    (f) => f.shareStatus === "sharing" && f.location !== null
   );
 
   return (
     <MapContainer
       center={[initialCenter.lat, initialCenter.lng]}
       zoom={initialZoom}
-      style={{ width: '100%', height }}
+      style={{ width: "100%", height }}
       zoomControl={false}
       attributionControl={false}
     >
-      <MapController 
-        centerOverride={centerOverride} 
-        zoomOverride={zoomOverride} 
+      <MapController
+        centerOverride={centerOverride}
+        zoomOverride={zoomOverride}
         currentUserPosition={currentUser.position}
       />
       <TileLayer
@@ -163,16 +176,30 @@ export function CampusMap({
             fillColor: fence.color,
             fillOpacity: 0.1,
             weight: 2.5,
-            dashArray: '8 5',
+            dashArray: "8 5",
           }}
         >
           <Popup>
-            <div style={{ fontFamily: 'system-ui', fontSize: '13px', minWidth: '140px' }}>
-              <div style={{ fontWeight: 700, marginBottom: '2px' }}>
+            <div
+              style={{
+                fontFamily: "system-ui",
+                fontSize: "13px",
+                minWidth: "140px",
+              }}
+            >
+              <div style={{ fontWeight: 700, marginBottom: "2px" }}>
                 {fence.icon} {fence.name}
               </div>
-              <div style={{ color: '#6B7280', fontSize: '11px' }}>{fence.description}</div>
-              <div style={{ color: fence.color, fontSize: '11px', marginTop: '4px' }}>
+              <div style={{ color: "#6B7280", fontSize: "11px" }}>
+                {fence.description}
+              </div>
+              <div
+                style={{
+                  color: fence.color,
+                  fontSize: "11px",
+                  marginTop: "4px",
+                }}
+              >
                 Radius: {fence.radius}m
               </div>
             </div>
@@ -181,15 +208,20 @@ export function CampusMap({
       ))}
 
       {/* Current user marker — only after real profile is loaded to avoid flashing mock "AC" */}
-      {profileLoaded && currentUser.currentMode === 'sharing' && (
+      {profileLoaded && currentUser.currentMode === "sharing" && (
         <Marker
           position={[currentUser.position.lat, currentUser.position.lng]}
-          icon={createCurrentUserIcon(currentUser.initials, currentUser.avatarColor)}
+          icon={createCurrentUserIcon(
+            currentUser.initials,
+            currentUser.avatarColor
+          )}
         >
           <Popup>
-            <div style={{ fontFamily: 'system-ui', fontSize: '13px' }}>
+            <div style={{ fontFamily: "system-ui", fontSize: "13px" }}>
               <div style={{ fontWeight: 700 }}>You ({currentUser.name})</div>
-              <div style={{ color: '#10B981', fontSize: '11px' }}>● Sharing live</div>
+              <div style={{ color: "#10B981", fontSize: "11px" }}>
+                ● Sharing live
+              </div>
             </div>
           </Popup>
         </Marker>
@@ -198,21 +230,36 @@ export function CampusMap({
       {/* Friend markers */}
       {visibleFriends.map((friend) => {
         if (!friend.location) return null;
-        if (friend.location.mode === 'binary') return null;
+        if (friend.location.mode === "binary") return null;
 
         return (
           <Marker
             key={friend.id}
-            position={[friend.location.position.lat, friend.location.position.lng]}
+            position={[
+              friend.location.position.lat,
+              friend.location.position.lng,
+            ]}
             icon={createAvatarIcon(friend.initials, friend.avatarColor)}
           >
             <Popup>
-              <div style={{ fontFamily: 'system-ui', fontSize: '13px', minWidth: '130px' }}>
+              <div
+                style={{
+                  fontFamily: "system-ui",
+                  fontSize: "13px",
+                  minWidth: "130px",
+                }}
+              >
                 <div style={{ fontWeight: 700 }}>{friend.name}</div>
-                <div style={{ color: '#6B7280', fontSize: '11px' }}>
+                <div style={{ color: "#6B7280", fontSize: "11px" }}>
                   {friend.major} · {friend.year}
                 </div>
-                <div style={{ color: '#9CA3AF', fontSize: '10px', marginTop: '3px' }}>
+                <div
+                  style={{
+                    color: "#9CA3AF",
+                    fontSize: "10px",
+                    marginTop: "3px",
+                  }}
+                >
                   Updated {friend.location.lastUpdated}
                 </div>
               </div>

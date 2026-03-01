@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { useLocation } from 'react-router';
-import { CampusMap } from '../components/map/CampusMap';
-import { useApp } from '../store/AppContext';
-import { MapTopBar } from '../components/map/MapTopBar';
-import { LocationStatusBanner } from '../components/map/LocationStatusBanner';
-import { NotificationsPanel } from '../components/map/NotificationsPanel';
-import { MapBottomSheet } from '../components/map/MapBottomSheet';
+import { useState } from "react";
+import { useLocation } from "react-router";
+import { CampusMap } from "../components/map/CampusMap";
+import { useApp } from "../store/AppContext";
+import { MapTopBar } from "../components/map/MapTopBar";
+import { LocationStatusBanner } from "../components/map/LocationStatusBanner";
+import { NotificationsPanel } from "../components/map/NotificationsPanel";
+import { MapBottomSheet } from "../components/map/MapBottomSheet";
 
 export function MapPage() {
   const {
@@ -21,13 +21,16 @@ export function MapPage() {
   } = useApp();
 
   const location = useLocation();
-  const navState = location.state as { centerOn?: { lat: number; lng: number }; focusFriendId?: string } | null;
+  const navState = location.state as {
+    centerOn?: { lat: number; lng: number };
+    focusFriendId?: string;
+  } | null;
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [bottomOpen, setBottomOpen] = useState(false);
   const [fenceFilter, setFenceFilter] = useState<string | null>(null);
 
-  const sharingFriends = friends.filter((f) => f.shareStatus === 'sharing');
+  const sharingFriends = friends.filter((f) => f.shareStatus === "sharing");
   const activeIds = fenceFilter ? [fenceFilter] : geofences.map((f) => f.id);
 
   return (

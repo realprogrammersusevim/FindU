@@ -1,7 +1,10 @@
-const BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000"
+const BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
-export async function apiFetch(path: string, options?: RequestInit): Promise<Response> {
-  const token = localStorage.getItem("auth_token")
+export async function apiFetch(
+  path: string,
+  options?: RequestInit
+): Promise<Response> {
+  const token = localStorage.getItem("auth_token");
   return fetch(BASE + path, {
     ...options,
     headers: {
@@ -9,5 +12,5 @@ export async function apiFetch(path: string, options?: RequestInit): Promise<Res
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
-  })
+  });
 }

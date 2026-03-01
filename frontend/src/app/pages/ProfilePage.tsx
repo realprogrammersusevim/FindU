@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Bell,
   Shield,
@@ -15,23 +15,26 @@ import {
   LogOut,
   Edit3,
   Loader2,
-} from 'lucide-react';
-import { Link } from 'react-router';
-import { useApp } from '../store/AppContext';
-import { AnimatePresence, motion } from 'motion/react';
+} from "lucide-react";
+import { Link } from "react-router";
+import { useApp } from "../store/AppContext";
+import { AnimatePresence, motion } from "motion/react";
 
 function EditProfileModal({ onClose }: { onClose: () => void }) {
   const { currentUser, updateProfile } = useApp();
   const [name, setName] = useState(currentUser.name);
-  const [bio, setBio] = useState(currentUser.bio ?? '');
-  const [major, setMajor] = useState(currentUser.major ?? '');
-  const [year, setYear] = useState(currentUser.year ?? '');
+  const [bio, setBio] = useState(currentUser.bio ?? "");
+  const [major, setMajor] = useState(currentUser.major ?? "");
+  const [year, setYear] = useState(currentUser.year ?? "");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSave = async () => {
-    if (!name.trim()) { setError('Name is required'); return; }
-    setError('');
+    if (!name.trim()) {
+      setError("Name is required");
+      return;
+    }
+    setError("");
     setLoading(true);
     try {
       await updateProfile({
@@ -42,7 +45,7 @@ function EditProfileModal({ onClose }: { onClose: () => void }) {
       });
       onClose();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to update profile');
+      setError(e instanceof Error ? e.message : "Failed to update profile");
     } finally {
       setLoading(false);
     }
@@ -57,33 +60,45 @@ function EditProfileModal({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <motion.div
-        initial={{ y: '100%' }}
+        initial={{ y: "100%" }}
         animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 25 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 25 }}
         className="bg-white rounded-t-3xl w-full max-w-[430px] overflow-hidden"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="font-bold text-gray-900">Edit Profile</h3>
-          <button onClick={onClose} className="text-gray-400 text-xl leading-none">×</button>
+          <button
+            onClick={onClose}
+            className="text-gray-400 text-xl leading-none"
+          >
+            ×
+          </button>
         </div>
 
-        <div className="px-5 py-4 space-y-4 overflow-y-auto" style={{ maxHeight: '70vh' }}>
+        <div
+          className="px-5 py-4 space-y-4 overflow-y-auto"
+          style={{ maxHeight: "70vh" }}
+        >
           <div>
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Display Name</label>
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">
+              Display Name
+            </label>
             <input
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-800 outline-none"
               autoFocus
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Bio</label>
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">
+              Bio
+            </label>
             <textarea
               value={bio}
-              onChange={e => setBio(e.target.value)}
+              onChange={(e) => setBio(e.target.value)}
               rows={3}
               placeholder="Tell your friends a bit about yourself…"
               className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 outline-none resize-none"
@@ -91,19 +106,23 @@ function EditProfileModal({ onClose }: { onClose: () => void }) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-gray-500 mb-1 block">Major</label>
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">
+                Major
+              </label>
               <input
                 value={major}
-                onChange={e => setMajor(e.target.value)}
+                onChange={(e) => setMajor(e.target.value)}
                 placeholder="e.g. Computer Science"
                 className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-500 mb-1 block">Year</label>
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">
+                Year
+              </label>
               <select
                 value={year}
-                onChange={e => setYear(e.target.value)}
+                onChange={(e) => setYear(e.target.value)}
                 className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-800 outline-none"
               >
                 <option value="">Select…</option>
@@ -124,7 +143,7 @@ function EditProfileModal({ onClose }: { onClose: () => void }) {
             className="w-full py-3 bg-indigo-600 text-white text-sm font-semibold rounded-2xl disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {loading ? 'Saving…' : 'Save Changes'}
+            {loading ? "Saving…" : "Save Changes"}
           </button>
         </div>
         <div className="h-4" />
@@ -134,63 +153,78 @@ function EditProfileModal({ onClose }: { onClose: () => void }) {
 }
 
 export function ProfilePage() {
-  const { currentUser, friends, groups, notifications, unreadCount, togglePrivacyMode, markNotificationsRead, logout } = useApp();
+  const {
+    currentUser,
+    friends,
+    groups,
+    notifications,
+    unreadCount,
+    togglePrivacyMode,
+    markNotificationsRead,
+    logout,
+  } = useApp();
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
   const myGroups = groups.filter((g) => g.isJoined);
-  const sharingFriends = friends.filter((f) => f.shareStatus === 'sharing');
+  const sharingFriends = friends.filter((f) => f.shareStatus === "sharing");
 
   const settingsSections = [
     {
-      title: 'Location & Privacy',
+      title: "Location & Privacy",
       items: [
         {
-          icon: currentUser.currentMode === 'sharing' ? Radio : Lock,
-          label: 'Location Status',
-          value: currentUser.currentMode === 'sharing' ? 'Sharing' : 'Private',
-          valueColor: currentUser.currentMode === 'sharing' ? 'text-green-600' : 'text-amber-600',
+          icon: currentUser.currentMode === "sharing" ? Radio : Lock,
+          label: "Location Status",
+          value: currentUser.currentMode === "sharing" ? "Sharing" : "Private",
+          valueColor:
+            currentUser.currentMode === "sharing"
+              ? "text-green-600"
+              : "text-amber-600",
           action: togglePrivacyMode,
         },
         {
-          icon: currentUser.locationMode === 'exact' ? Eye : EyeOff,
-          label: 'Location Precision',
-          value: currentUser.locationMode === 'exact' ? 'Exact' : 'Binary / Zone only',
-          link: '/privacy',
+          icon: currentUser.locationMode === "exact" ? Eye : EyeOff,
+          label: "Location Precision",
+          value:
+            currentUser.locationMode === "exact"
+              ? "Exact"
+              : "Binary / Zone only",
+          link: "/privacy",
         },
         {
           icon: MapPin,
-          label: 'Geofences & Schedules',
+          label: "Geofences & Schedules",
           value: `${currentUser.scheduleSlots.length} schedules`,
-          link: '/privacy',
+          link: "/privacy",
         },
       ],
     },
     {
-      title: 'Social',
+      title: "Social",
       items: [
         {
           icon: Users,
-          label: 'Friends',
+          label: "Friends",
           value: `${currentUser.friendCount} connected`,
-          link: '/friends',
+          link: "/friends",
         },
         {
           icon: Users,
-          label: 'My Groups',
+          label: "My Groups",
           value: `${myGroups.length} joined`,
-          link: '/groups',
+          link: "/groups",
         },
       ],
     },
     {
-      title: 'Notifications',
+      title: "Notifications",
       items: [
         {
           icon: Bell,
-          label: 'Alerts',
+          label: "Alerts",
           value: `${unreadCount} unread`,
-          valueColor: unreadCount > 0 ? 'text-red-500' : 'text-gray-400',
+          valueColor: unreadCount > 0 ? "text-red-500" : "text-gray-400",
           action: () => {
             setShowNotifPanel(true);
             markNotificationsRead();
@@ -198,29 +232,29 @@ export function ProfilePage() {
         },
         {
           icon: Shield,
-          label: 'Geofence Alerts',
-          value: 'On',
-          valueColor: 'text-green-600',
+          label: "Geofence Alerts",
+          value: "On",
+          valueColor: "text-green-600",
         },
       ],
     },
     {
-      title: 'App',
+      title: "App",
       items: [
         {
           icon: Settings,
-          label: 'App Settings',
-          value: '',
+          label: "App Settings",
+          value: "",
         },
         {
           icon: Info,
-          label: 'About GeoShare',
-          value: 'v1.0.0',
+          label: "About GeoShare",
+          value: "v1.0.0",
         },
         {
           icon: LogOut,
-          label: 'Sign Out',
-          value: '',
+          label: "Sign Out",
+          value: "",
           danger: true,
           action: logout,
         },
@@ -248,10 +282,12 @@ export function ProfilePage() {
                 </div>
                 <div
                   className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center ${
-                    currentUser.currentMode === 'sharing' ? 'bg-green-500' : 'bg-amber-400'
+                    currentUser.currentMode === "sharing"
+                      ? "bg-green-500"
+                      : "bg-amber-400"
                   }`}
                 >
-                  {currentUser.currentMode === 'sharing' ? (
+                  {currentUser.currentMode === "sharing" ? (
                     <Radio className="w-2.5 h-2.5 text-white" />
                   ) : (
                     <Lock className="w-2.5 h-2.5 text-white" />
@@ -259,7 +295,9 @@ export function ProfilePage() {
                 </div>
               </div>
               <div>
-                <h1 className="text-lg font-bold text-white">{currentUser.name}</h1>
+                <h1 className="text-lg font-bold text-white">
+                  {currentUser.name}
+                </h1>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <GraduationCap className="w-3.5 h-3.5 text-white/70" />
                   <span className="text-xs text-white/80">
@@ -281,13 +319,26 @@ export function ProfilePage() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Friends', value: currentUser.friendCount, sub: `${sharingFriends.length} active` },
-              { label: 'Groups', value: myGroups.length, sub: 'joined' },
-              { label: 'Zones', value: currentUser.activeGeofenceIds.length, sub: 'active' },
+              {
+                label: "Friends",
+                value: currentUser.friendCount,
+                sub: `${sharingFriends.length} active`,
+              },
+              { label: "Groups", value: myGroups.length, sub: "joined" },
+              {
+                label: "Zones",
+                value: currentUser.activeGeofenceIds.length,
+                sub: "active",
+              },
             ].map((stat) => (
-              <div key={stat.label} className="bg-white/15 rounded-xl p-2.5 text-center">
+              <div
+                key={stat.label}
+                className="bg-white/15 rounded-xl p-2.5 text-center"
+              >
                 <p className="text-lg font-bold text-white">{stat.value}</p>
-                <p className="text-[10px] text-white/80 font-semibold">{stat.label}</p>
+                <p className="text-[10px] text-white/80 font-semibold">
+                  {stat.label}
+                </p>
                 <p className="text-[9px] text-white/60">{stat.sub}</p>
               </div>
             ))}
@@ -312,26 +363,28 @@ export function ProfilePage() {
                     key={item.label}
                     onClick={item.action}
                     className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors text-left ${
-                      !isLast ? 'border-b border-gray-50' : ''
-                    } ${(item as { danger?: boolean }).danger ? 'text-red-500' : ''}`}
+                      !isLast ? "border-b border-gray-50" : ""
+                    } ${(item as { danger?: boolean }).danger ? "text-red-500" : ""}`}
                   >
                     <div
                       className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        (item as { danger?: boolean }).danger ? 'bg-red-50' : 'bg-gray-100'
+                        (item as { danger?: boolean }).danger
+                          ? "bg-red-50"
+                          : "bg-gray-100"
                       }`}
                     >
                       <Icon
-                        className={`w-4 h-4 ${(item as { danger?: boolean }).danger ? 'text-red-500' : 'text-gray-500'}`}
+                        className={`w-4 h-4 ${(item as { danger?: boolean }).danger ? "text-red-500" : "text-gray-500"}`}
                       />
                     </div>
                     <span
-                      className={`flex-1 text-sm font-medium ${(item as { danger?: boolean }).danger ? 'text-red-600' : 'text-gray-800'}`}
+                      className={`flex-1 text-sm font-medium ${(item as { danger?: boolean }).danger ? "text-red-600" : "text-gray-800"}`}
                     >
                       {item.label}
                     </span>
                     {item.value && (
                       <span
-                        className={`text-xs font-medium mr-1 ${(item as { valueColor?: string }).valueColor || 'text-gray-400'}`}
+                        className={`text-xs font-medium mr-1 ${(item as { valueColor?: string }).valueColor || "text-gray-400"}`}
                       >
                         {item.value}
                       </span>
@@ -342,7 +395,11 @@ export function ProfilePage() {
 
                 if ((item as { link?: string }).link) {
                   return (
-                    <Link key={item.label} to={(item as { link: string }).link} className="block">
+                    <Link
+                      key={item.label}
+                      to={(item as { link: string }).link}
+                      className="block"
+                    >
                       {content}
                     </Link>
                   );
@@ -364,36 +421,52 @@ export function ProfilePage() {
               onClick={() => setShowNotifPanel(false)}
             >
               <motion.div
-                initial={{ y: '100%' }}
+                initial={{ y: "100%" }}
                 animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', damping: 25 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25 }}
                 className="bg-white rounded-t-3xl w-full max-w-[430px] max-h-[70vh] overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                   <h3 className="font-bold text-gray-900">All Notifications</h3>
-                  <button onClick={() => setShowNotifPanel(false)} className="text-gray-400 text-xl">×</button>
+                  <button
+                    onClick={() => setShowNotifPanel(false)}
+                    className="text-gray-400 text-xl"
+                  >
+                    ×
+                  </button>
                 </div>
-                <div className="overflow-y-auto" style={{ maxHeight: '60vh' }}>
+                <div className="overflow-y-auto" style={{ maxHeight: "60vh" }}>
                   {notifications.map((n) => (
-                    <div key={n.id} className="px-5 py-3 border-b border-gray-50 flex items-start gap-3">
+                    <div
+                      key={n.id}
+                      className="px-5 py-3 border-b border-gray-50 flex items-start gap-3"
+                    >
                       <div
                         className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${
-                          n.type === 'entered_fence'
-                            ? 'bg-green-100'
-                            : n.type === 'left_fence'
-                              ? 'bg-amber-100'
-                              : n.type === 'group_invite'
-                                ? 'bg-indigo-100'
-                                : 'bg-gray-100'
+                          n.type === "entered_fence"
+                            ? "bg-green-100"
+                            : n.type === "left_fence"
+                              ? "bg-amber-100"
+                              : n.type === "group_invite"
+                                ? "bg-indigo-100"
+                                : "bg-gray-100"
                         }`}
                       >
-                        {n.type === 'entered_fence' ? '📍' : n.type === 'left_fence' ? '🚶' : n.type === 'group_invite' ? '👥' : '🔔'}
+                        {n.type === "entered_fence"
+                          ? "📍"
+                          : n.type === "left_fence"
+                            ? "🚶"
+                            : n.type === "group_invite"
+                              ? "👥"
+                              : "🔔"}
                       </div>
                       <div className="flex-1">
                         <p className="text-sm text-gray-800">{n.message}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{n.timestamp}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {n.timestamp}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -411,14 +484,18 @@ export function ProfilePage() {
             </div>
             <span className="text-sm font-bold text-gray-700">GeoShare</span>
           </div>
-          <p className="text-xs text-gray-400">Campus-aware location sharing · v1.0.0</p>
+          <p className="text-xs text-gray-400">
+            Campus-aware location sharing · v1.0.0
+          </p>
           <p className="text-[10px] text-gray-300 mt-1">Westbrook University</p>
         </div>
       </div>
 
       {/* Edit Profile Modal */}
       <AnimatePresence>
-        {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
+        {showEditModal && (
+          <EditProfileModal onClose={() => setShowEditModal(false)} />
+        )}
       </AnimatePresence>
     </div>
   );

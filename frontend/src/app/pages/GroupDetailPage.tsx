@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router";
 import {
   ArrowLeft,
   Bell,
@@ -16,13 +16,13 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
-} from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
-import { CampusMap } from '../components/map/CampusMap';
-import { useApp } from '../store/AppContext';
-import type { DayOfWeek, GroupRule, LocationMode } from '../types';
+} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { CampusMap } from "../components/map/CampusMap";
+import { useApp } from "../store/AppContext";
+import type { DayOfWeek, GroupRule, LocationMode } from "../types";
 
-const DAYS: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAYS: DayOfWeek[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function RuleEditor({
   rule,
@@ -34,7 +34,9 @@ function RuleEditor({
   onDelete: () => void;
 }) {
   const toggleDay = (d: DayOfWeek) => {
-    const next = rule.days.includes(d) ? rule.days.filter((x) => x !== d) : [...rule.days, d];
+    const next = rule.days.includes(d)
+      ? rule.days.filter((x) => x !== d)
+      : [...rule.days, d];
     onUpdate({ ...rule, days: next });
   };
 
@@ -46,7 +48,10 @@ function RuleEditor({
           onChange={(e) => onUpdate({ ...rule, label: e.target.value })}
           className="text-xs font-semibold text-gray-800 bg-transparent outline-none flex-1"
         />
-        <button onClick={onDelete} className="p-1 text-gray-400 hover:text-red-500">
+        <button
+          onClick={onDelete}
+          className="p-1 text-gray-400 hover:text-red-500"
+        >
           <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -59,8 +64,8 @@ function RuleEditor({
             onClick={() => toggleDay(d)}
             className={`w-7 h-7 rounded-lg text-[10px] font-bold transition-colors ${
               rule.days.includes(d)
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-400 border border-gray-200'
+                ? "bg-indigo-600 text-white"
+                : "bg-white text-gray-400 border border-gray-200"
             }`}
           >
             {d[0]}
@@ -92,18 +97,22 @@ function RuleEditor({
 
       {/* Location mode */}
       <div className="flex gap-1">
-        {(['exact', 'binary'] as LocationMode[]).map((m) => (
+        {(["exact", "binary"] as LocationMode[]).map((m) => (
           <button
             key={m}
             onClick={() => onUpdate({ ...rule, locationMode: m })}
             className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-semibold transition-colors ${
               rule.locationMode === m
-                ? 'bg-indigo-100 text-indigo-700'
-                : 'bg-white text-gray-500 border border-gray-200'
+                ? "bg-indigo-100 text-indigo-700"
+                : "bg-white text-gray-500 border border-gray-200"
             }`}
           >
-            {m === 'exact' ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-            {m === 'exact' ? 'Exact location' : 'Binary only'}
+            {m === "exact" ? (
+              <Eye className="w-3 h-3" />
+            ) : (
+              <EyeOff className="w-3 h-3" />
+            )}
+            {m === "exact" ? "Exact location" : "Binary only"}
           </button>
         ))}
       </div>
@@ -114,11 +123,21 @@ function RuleEditor({
 export function GroupDetailPage() {
   const { groupId } = useParams();
   const navigate = useNavigate();
-  const { groups, geofences, friends, currentUser, toggleGroupAlerts, updateGroupRules, toggleGroupJoin, updateMemberRole, removeMember, disbandGroup } =
-    useApp();
+  const {
+    groups,
+    geofences,
+    friends,
+    currentUser,
+    toggleGroupAlerts,
+    updateGroupRules,
+    toggleGroupJoin,
+    updateMemberRole,
+    removeMember,
+    disbandGroup,
+  } = useApp();
 
   const group = groups.find((g) => g.id === groupId);
-  const [tab, setTab] = useState<'members' | 'rules' | 'admin'>('members');
+  const [tab, setTab] = useState<"members" | "rules" | "admin">("members");
   const [mapOpen, setMapOpen] = useState(true);
 
   if (!group) {
@@ -127,7 +146,10 @@ export function GroupDetailPage() {
         <div className="text-center">
           <div className="text-4xl mb-2">😕</div>
           <p className="text-gray-600">Group not found</p>
-          <button onClick={() => navigate('/groups')} className="mt-3 text-indigo-600 text-sm">
+          <button
+            onClick={() => navigate("/groups")}
+            className="mt-3 text-indigo-600 text-sm"
+          >
             ← Back to Groups
           </button>
         </div>
@@ -135,19 +157,18 @@ export function GroupDetailPage() {
     );
   }
 
-  const isAdmin = group.myRole === 'admin';
+  const isAdmin = group.myRole === "admin";
   const groupFences = geofences.filter((f) => group.geofenceIds.includes(f.id));
-  const fenceCenter =
-    groupFences[0]?.center || currentUser.position;
+  const fenceCenter = groupFences[0]?.center || currentUser.position;
 
   const handleAddRule = () => {
     const newRule: GroupRule = {
       id: `rule-${Date.now()}`,
-      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-      startTime: '09:00',
-      endTime: '17:00',
-      locationMode: 'exact',
-      label: 'New Rule',
+      days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      startTime: "09:00",
+      endTime: "17:00",
+      locationMode: "exact",
+      label: "New Rule",
     };
     updateGroupRules(group.id, [...group.rules, newRule]);
   };
@@ -172,7 +193,7 @@ export function GroupDetailPage() {
       <div className="bg-white px-4 pt-4 pb-3 border-b border-gray-100">
         <div className="flex items-center gap-3 mb-3">
           <button
-            onClick={() => navigate('/groups')}
+            onClick={() => navigate("/groups")}
             className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 text-gray-600" />
@@ -205,7 +226,7 @@ export function GroupDetailPage() {
           <button
             onClick={() => toggleGroupAlerts(group.id)}
             className={`p-2 rounded-xl transition-colors ${
-              group.alertsEnabled ? 'bg-indigo-100' : 'bg-gray-100'
+              group.alertsEnabled ? "bg-indigo-100" : "bg-gray-100"
             }`}
           >
             {group.alertsEnabled ? (
@@ -232,18 +253,28 @@ export function GroupDetailPage() {
 
         {/* Tabs */}
         <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
-          {([
-            { id: 'members', label: 'Members', icon: Users },
-            { id: 'rules', label: 'Rules', icon: Clock },
-            ...(isAdmin ? [{ id: 'admin', label: 'Admin', icon: Settings }] : []),
-          ] as { id: string; label: string; icon: React.FC<{ className?: string }> }[]).map((t) => {
+          {(
+            [
+              { id: "members", label: "Members", icon: Users },
+              { id: "rules", label: "Rules", icon: Clock },
+              ...(isAdmin
+                ? [{ id: "admin", label: "Admin", icon: Settings }]
+                : []),
+            ] as {
+              id: string;
+              label: string;
+              icon: React.FC<{ className?: string }>;
+            }[]
+          ).map((t) => {
             const Icon = t.icon;
             return (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id as typeof tab)}
                 className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  tab === t.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                  tab === t.id
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500"
                 }`}
               >
                 <Icon className="w-3 h-3" />
@@ -295,7 +326,7 @@ export function GroupDetailPage() {
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {/* Members tab */}
-        {tab === 'members' && (
+        {tab === "members" && (
           <div className="space-y-2">
             {group.members.map((member) => (
               <div
@@ -315,11 +346,13 @@ export function GroupDetailPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold text-gray-800">{member.name}</span>
-                    {member.role === 'admin' && (
+                    <span className="text-sm font-semibold text-gray-800">
+                      {member.name}
+                    </span>
+                    {member.role === "admin" && (
                       <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
                     )}
-                    {member.role === 'moderator' && (
+                    {member.role === "moderator" && (
                       <Shield className="w-3.5 h-3.5 text-indigo-500" />
                     )}
                   </div>
@@ -327,21 +360,21 @@ export function GroupDetailPage() {
                     <span
                       className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
                         member.withinGeofence
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 text-gray-500'
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-100 text-gray-500"
                       }`}
                     >
-                      {member.withinGeofence ? '✓ In zone' : '○ Outside zone'}
+                      {member.withinGeofence ? "✓ In zone" : "○ Outside zone"}
                     </span>
                     <span
-                      className={`text-[10px] capitalize ${member.role === 'admin' ? 'text-amber-600 font-semibold' : member.role === 'moderator' ? 'text-indigo-600 font-semibold' : 'text-gray-400'}`}
+                      className={`text-[10px] capitalize ${member.role === "admin" ? "text-amber-600 font-semibold" : member.role === "moderator" ? "text-indigo-600 font-semibold" : "text-gray-400"}`}
                     >
                       {member.role}
                     </span>
                   </div>
                 </div>
                 <div
-                  className={`w-2 h-2 rounded-full ${member.isOnline ? 'bg-green-500' : 'bg-gray-300'}`}
+                  className={`w-2 h-2 rounded-full ${member.isOnline ? "bg-green-500" : "bg-gray-300"}`}
                 />
               </div>
             ))}
@@ -367,7 +400,7 @@ export function GroupDetailPage() {
         )}
 
         {/* Rules tab */}
-        {tab === 'rules' && (
+        {tab === "rules" && (
           <div className="space-y-3">
             <div className="bg-indigo-50 rounded-2xl p-3 border border-indigo-100">
               <p className="text-xs text-indigo-700 font-semibold mb-1">
@@ -375,8 +408,9 @@ export function GroupDetailPage() {
                 How Rules Work
               </p>
               <p className="text-xs text-indigo-600">
-                Admins can only see member locations within the group's geofence during active rule
-                windows. Outside these hours, locations are automatically hidden.
+                Admins can only see member locations within the group's geofence
+                during active rule windows. Outside these hours, locations are
+                automatically hidden.
               </p>
             </div>
 
@@ -385,16 +419,23 @@ export function GroupDetailPage() {
                 <div className="text-3xl mb-2">⏰</div>
                 <p className="text-sm text-gray-500">No rules set yet</p>
                 {isAdmin && (
-                  <p className="text-xs text-gray-400 mt-1">Add a rule to control when locations are visible</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Add a rule to control when locations are visible
+                  </p>
                 )}
               </div>
             ) : (
               group.rules.map((rule) => (
-                <div key={rule.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                <div
+                  key={rule.id}
+                  className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"
+                >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-gray-800">{rule.label}</span>
+                    <span className="text-sm font-semibold text-gray-800">
+                      {rule.label}
+                    </span>
                     <div className="flex items-center gap-1.5">
-                      {rule.locationMode === 'exact' ? (
+                      {rule.locationMode === "exact" ? (
                         <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
                           <Eye className="w-3 h-3" /> Exact
                         </span>
@@ -411,8 +452,8 @@ export function GroupDetailPage() {
                         key={d}
                         className={`w-7 h-7 rounded-lg text-[10px] font-bold flex items-center justify-center ${
                           rule.days.includes(d)
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-gray-100 text-gray-400'
+                            ? "bg-indigo-600 text-white"
+                            : "bg-gray-100 text-gray-400"
                         }`}
                       >
                         {d[0]}
@@ -440,12 +481,14 @@ export function GroupDetailPage() {
         )}
 
         {/* Admin tab */}
-        {tab === 'admin' && isAdmin && (
+        {tab === "admin" && isAdmin && (
           <div className="space-y-4">
             {/* Rule editor */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-gray-700">Edit Rules</span>
+                <span className="text-sm font-semibold text-gray-700">
+                  Edit Rules
+                </span>
                 <button
                   onClick={handleAddRule}
                   className="flex items-center gap-1 text-xs text-indigo-600 font-semibold"
@@ -463,28 +506,43 @@ export function GroupDetailPage() {
                   />
                 ))}
                 {group.rules.length === 0 && (
-                  <p className="text-xs text-gray-400 text-center py-3">No rules — add one above</p>
+                  <p className="text-xs text-gray-400 text-center py-3">
+                    No rules — add one above
+                  </p>
                 )}
               </div>
             </div>
 
             {/* Member management */}
             <div>
-              <span className="text-sm font-semibold text-gray-700 block mb-2">Member Management</span>
+              <span className="text-sm font-semibold text-gray-700 block mb-2">
+                Member Management
+              </span>
               <div className="space-y-2">
                 {group.members.map((m) => (
-                  <div key={m.userId} className="bg-white rounded-xl p-3 flex items-center gap-3 border border-gray-100">
+                  <div
+                    key={m.userId}
+                    className="bg-white rounded-xl p-3 flex items-center gap-3 border border-gray-100"
+                  >
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
                       style={{ backgroundColor: m.avatarColor }}
                     >
                       {m.initials}
                     </div>
-                    <span className="flex-1 text-sm text-gray-800">{m.name}</span>
+                    <span className="flex-1 text-sm text-gray-800">
+                      {m.name}
+                    </span>
                     <select
                       value={m.role}
                       className="text-xs bg-gray-100 rounded-lg px-2 py-1 outline-none text-gray-600"
-                      onChange={(e) => updateMemberRole(group.id, m.userId, e.target.value as 'admin' | 'moderator' | 'member')}
+                      onChange={(e) =>
+                        updateMemberRole(
+                          group.id,
+                          m.userId,
+                          e.target.value as "admin" | "moderator" | "member"
+                        )
+                      }
                     >
                       <option value="member">Member</option>
                       <option value="moderator">Moderator</option>
@@ -505,11 +563,17 @@ export function GroupDetailPage() {
 
             {/* Danger zone */}
             <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
-              <p className="text-sm font-semibold text-red-700 mb-2">Danger Zone</p>
+              <p className="text-sm font-semibold text-red-700 mb-2">
+                Danger Zone
+              </p>
               <button
                 onClick={() => {
-                  if (window.confirm(`Disband "${group.name}"? This cannot be undone.`)) {
-                    disbandGroup(group.id).then(() => navigate('/groups'));
+                  if (
+                    window.confirm(
+                      `Disband "${group.name}"? This cannot be undone.`
+                    )
+                  ) {
+                    disbandGroup(group.id).then(() => navigate("/groups"));
                   }
                 }}
                 className="w-full py-2 bg-red-100 text-red-700 text-xs font-semibold rounded-xl hover:bg-red-200 transition-colors"

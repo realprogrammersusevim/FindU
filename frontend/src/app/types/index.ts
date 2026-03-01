@@ -3,11 +3,11 @@ export interface LatLng {
   lng: number;
 }
 
-export type LocationMode = 'exact' | 'binary';
-export type PrivacyMode = 'sharing' | 'private';
-export type DayOfWeek = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
-export type GroupType = 'greek' | 'club' | 'class' | 'sports' | 'custom';
-export type ShareStatus = 'sharing' | 'private' | 'offline';
+export type LocationMode = "exact" | "binary";
+export type PrivacyMode = "sharing" | "private";
+export type DayOfWeek = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+export type GroupType = "greek" | "club" | "class" | "sports" | "custom";
+export type ShareStatus = "sharing" | "private" | "offline";
 
 export interface Geofence {
   id: string;
@@ -44,7 +44,7 @@ export interface GroupMember {
   name: string;
   initials: string;
   avatarColor: string;
-  role: 'admin' | 'moderator' | 'member';
+  role: "admin" | "moderator" | "member";
   isOnline: boolean;
   withinGeofence: boolean;
 }
@@ -71,7 +71,7 @@ export interface Group {
   geofenceIds: string[];
   rules: GroupRule[];
   isJoined: boolean;
-  myRole: 'admin' | 'moderator' | 'member' | 'none';
+  myRole: "admin" | "moderator" | "member" | "none";
   alertsEnabled: boolean;
 }
 
@@ -124,7 +124,12 @@ export interface FriendRequest {
 
 export interface AppNotification {
   id: string;
-  type: 'entered_fence' | 'left_fence' | 'friend_request' | 'group_invite' | 'alert';
+  type:
+    | "entered_fence"
+    | "left_fence"
+    | "friend_request"
+    | "group_invite"
+    | "alert";
   message: string;
   timestamp: string;
   isRead: boolean;
