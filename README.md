@@ -1,7 +1,5 @@
 # FindU
 
-[App deployment link](https://genitourinary-ayleen-undetestably.ngrok-free.dev)
-
 A student location-sharing mobile web app. Users share their campus location
 with friends and groups, with granular privacy controls and geofence-based
 zones.
